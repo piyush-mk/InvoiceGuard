@@ -1,10 +1,4 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the BSD-style license found in the
-# LICENSE file in the root directory of this source tree.
-
-"""Invoice Guard Environment Client."""
+"""InvoiceGuard Environment Client."""
 
 from typing import Dict
 
@@ -12,66 +6,43 @@ from openenv.core import EnvClient
 from openenv.core.client_types import StepResult
 from openenv.core.env_server.types import State
 
-from .models import InvoiceGuardAction, InvoiceGuardObservation
+from .models import (
+    InvoiceGuardAction,
+    InvoiceGuardObservation,
+    InvoiceGuardState,
+)
 
 
 class InvoiceGuardEnv(
-    EnvClient[InvoiceGuardAction, InvoiceGuardObservation, State]
+    EnvClient[InvoiceGuardAction, InvoiceGuardObservation, InvoiceGuardState]
 ):
     """
-    Client for the Invoice Guard Environment.
-
-    This client maintains a persistent WebSocket connection to the environment server,
-    enabling efficient multi-step interactions with lower latency.
-    Each client instance has its own dedicated environment session on the server.
+    Client for the InvoiceGuard Environment.
 
     Example:
-        >>> # Connect to a running server
-        >>> with InvoiceGuardEnv(base_url="http://localhost:8000") as client:
-        ...     result = client.reset()
-        ...     print(result.observation.echoed_message)
-        ...
-        ...     result = client.step(InvoiceGuardAction(message="Hello!"))
-        ...     print(result.observation.echoed_message)
-
-    Example with Docker:
-        >>> # Automatically start container and connect
-        >>> client = InvoiceGuardEnv.from_docker_image("invoice_guard-env:latest")
-        >>> try:
-        ...     result = client.reset()
-        ...     result = client.step(InvoiceGuardAction(message="Test"))
-        ... finally:
-        ...     client.close()
+        >>> async with InvoiceGuardEnv(base_url="http://localhost:8000") as client:
+        ...     result = await client.reset(task_id="task_1_clean_match")
+        ...     print(result.observation.invoice_summary)
     """
 
     def _step_payload(self, action: InvoiceGuardAction) -> Dict:
-        """
-        Convert InvoiceGuardAction to JSON payload for step message.
-
-        Args:
-            action: InvoiceGuardAction instance
-
-        Returns:
-            Dictionary representation suitable for JSON encoding
-        """
-        return {
-            "message": action.message,
-        }
+        return action.model_dump(exclude_none=True)
 
     def _parse_result(self, payload: Dict) -> StepResult[InvoiceGuardObservation]:
-        """
-        Parse server response into StepResult[InvoiceGuardObservation].
-
-        Args:
-            payload: JSON response data from server
-
-        Returns:
-            StepResult with InvoiceGuardObservation
-        """
         obs_data = payload.get("observation", {})
         observation = InvoiceGuardObservation(
-            echoed_message=obs_data.get("echoed_message", ""),
-            message_length=obs_data.get("message_length", 0),
+            case_id=obs_data.get("case_id", ""),
+            task_id=obs_data.get("task_id", ""),
+            difficulty=obs_data.get("difficulty", ""),
+            invoice_summary=obs_data.get("invoice_summary", ""),
+            goal=obs_data.get("goal", ""),
+            available_actions=obs_data.get("available_actions", []),
+            revealed_documents=obs_data.get("revealed_documents", []),
+            findings=obs_data.get("findings", []),
+            remaining_steps=obs_data.get("remaining_steps", 0),
+            last_action_result=obs_data.get("last_action_result", ""),
+            last_action_error=obs_data.get("last_action_error", False),
+            warnings=obs_data.get("warnings", []),
             done=payload.get("done", False),
             reward=payload.get("reward"),
             metadata=obs_data.get("metadata", {}),
@@ -83,17 +54,16 @@ class InvoiceGuardEnv(
             done=payload.get("done", False),
         )
 
-    def _parse_state(self, payload: Dict) -> State:
-        """
-        Parse server response into State object.
-
-        Args:
-            payload: JSON response from state request
-
-        Returns:
-            State object with episode_id and step_count
-        """
-        return State(
+    def _parse_state(self, payload: Dict) -> InvoiceGuardState:
+        return InvoiceGuardState(
             episode_id=payload.get("episode_id"),
             step_count=payload.get("step_count", 0),
+            task_id=payload.get("task_id", ""),
+            difficulty=payload.get("difficulty", ""),
+            case_id=payload.get("case_id", ""),
+            actions_taken=payload.get("actions_taken", []),
+            documents_revealed=payload.get("documents_revealed", []),
+            findings_collected=payload.get("findings_collected", []),
+            is_finalized=payload.get("is_finalized", False),
+            cumulative_reward=payload.get("cumulative_reward", 0.0),
         )
