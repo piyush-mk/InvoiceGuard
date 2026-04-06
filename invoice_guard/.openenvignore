@@ -1,0 +1,7 @@
+.env
+.env.example
+__pycache__/
+*.pyc
+.venv/
+inference.py
+test_live_space.py
