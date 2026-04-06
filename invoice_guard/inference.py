@@ -5,16 +5,24 @@ Runs a baseline LLM agent against all four tasks and reports per-task
 and overall grader scores. Uses the OpenAI API client as required by
 the hackathon guidelines.
 
+STDOUT FORMAT (mandatory):
+    [START] task=<task_name> env=invoice_guard model=<model_name>
+    [STEP]  step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
+    [END]   success=<true|false> steps=<n> score=<score> rewards=<r1,r2,...,rn>
+
 Environment variables:
-    API_BASE_URL   — LLM API endpoint (default: https://api.openai.com/v1)
-    MODEL_NAME     — model identifier (default: gpt-4o-mini)
-    HF_TOKEN       — Hugging Face / API key
-    OPENAI_API_KEY — API key for the LLM provider
+    API_BASE_URL       — LLM API endpoint (default: https://api.openai.com/v1)
+    MODEL_NAME         — model identifier (default: gpt-4o-mini)
+    HF_TOKEN           — Hugging Face token / fallback API key
+    OPENAI_API_KEY     — API key for the LLM provider
+    LOCAL_IMAGE_NAME   — Docker image name (if using from_docker_image mode)
 """
 
 import json
 import os
+import sys
 import time
+from typing import List, Optional
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -30,54 +38,79 @@ load_dotenv()
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
-API_KEY = os.getenv("OPENAI_API_KEY", HF_TOKEN)
+API_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("HF_TOKEN") or ""
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME", "")
+
+BENCHMARK = "invoice_guard"
 
 
-SYSTEM_PROMPT = """You are a senior accounts payable analyst. You review supplier invoice cases by comparing the invoice against the purchase order and goods receipt note.
+# ── Mandatory stdout logging ────────────────────────────────────────────
+
+
+def log_start(task: str, env: str, model: str) -> None:
+    print(f"[START] task={task} env={env} model={model}", flush=True)
+
+
+def log_step(step: int, action: str, reward: float, done: bool, error: Optional[str]) -> None:
+    error_val = error if error else "null"
+    done_val = str(done).lower()
+    print(
+        f"[STEP] step={step} action={action} reward={reward:.2f} "
+        f"done={done_val} error={error_val}",
+        flush=True,
+    )
+
+
+def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> None:
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    print(
+        f"[END] success={str(success).lower()} steps={steps} "
+        f"score={score:.2f} rewards={rewards_str}",
+        flush=True,
+    )
+
+
+# ── System prompt ────────────────────────────────────────────────────────
+
+
+SYSTEM_PROMPT = """You are a senior accounts payable analyst. You will be given an invoice case to investigate and resolve.
+
+The environment tells you your goal, available actions, and decision options. Read the goal carefully.
 
 WORKFLOW:
-1. Inspect documents (purchase order, goods receipt note, line items)
-2. Run comparisons (quantity, price, totals) and check for duplicates
-3. Review vendor profile and company policy if needed
-4. Submit your final resolution
+1. Investigate: inspect documents (PO, GRN, vendor profile, policy rules), run comparisons (quantity, price, totals), check for duplicates.
+2. Resolve: submit_final_resolution with your decision, exception type, evidence references, and explanation.
 
-AVAILABLE ACTIONS — respond with a JSON object containing "action_type":
+Complete a thorough investigation before resolving. Inspect at least: purchase order, goods receipt note, compare quantity, compare price, policy rules, duplicate check, and vendor profile.
 
-Investigation actions (just provide action_type):
-  inspect_invoice_line_items — reveal invoice line item details
-  inspect_purchase_order — reveal purchase order details
-  inspect_goods_receipt_note — reveal goods receipt note details
-  inspect_vendor_profile — reveal vendor risk and tolerance info
-  inspect_policy_rules — reveal company matching policies
-  check_for_duplicate_invoice — search case history for duplicates
-  compare_quantity — compare billed vs ordered vs received quantities
-  compare_price — compare billed price vs PO agreed price
-  compare_totals — verify subtotal, tax, and total consistency
-  summarize_findings — get a summary of collected findings
-  propose_exception_type — declare the suspected exception type
-
-Terminal action (ends the episode):
-  submit_final_resolution — provide all of the following fields:
-    "final_decision": one of "approve_for_payment" | "place_on_hold" | "reject_invoice" | "escalate_for_supervisor_review"
-    "exception_type": one of "clean_match" | "quantity_mismatch" | "price_mismatch" | "total_amount_mismatch" | "partial_receipt" | "missing_receipt" | "duplicate_invoice" | "tax_variance" | "policy_violation" | "mixed_discrepancy"
-    "evidence_references": list of action names that support your decision
-    "explanation": one-sentence justification
+RESPONSE FORMAT:
+- Respond with ONLY a valid JSON object. No markdown, no commentary.
+- Investigation example: {"action_type": "inspect_purchase_order"}
+- Resolution example: {"action_type": "submit_final_resolution", "final_decision": "approve_for_payment", "exception_type": "clean_match", "evidence_references": ["inspect_purchase_order", "compare_quantity"], "explanation": "All documents match within tolerance."}
 
 RULES:
-- Respond with ONLY a JSON object. No markdown, no commentary.
-- For investigation actions: {"action_type": "inspect_purchase_order"}
-- For resolution: {"action_type": "submit_final_resolution", "final_decision": "...", "exception_type": "...", "evidence_references": [...], "explanation": "..."}
-- Investigate before resolving. Do NOT guess without evidence.
-- Always inspect the purchase order and goods receipt note at minimum.
+- Pay close attention to POLICY findings — they tell you when escalation is required.
+- When multiple issues exist, escalation takes priority over hold.
+- Check PO references carefully before concluding an invoice is a duplicate.
+- Include all investigation actions you performed in evidence_references.
+- Cite specific numbers in your explanation.
+- NEVER repeat an action you already took.
+- When remaining_steps is 3 or fewer, submit immediately with what you have.
 """
 
 
-def build_observation_prompt(obs) -> str:
+# ── Prompt building ──────────────────────────────────────────────────────
+
+
+def build_observation_prompt(obs, is_first: bool = False) -> str:
     """Format observation as a readable prompt for the LLM."""
     parts = [
         f"Case: {obs.case_id} | Difficulty: {obs.difficulty} | Steps remaining: {obs.remaining_steps}",
         f"Invoice: {obs.invoice_summary}",
     ]
+
+    if is_first and obs.goal:
+        parts.append(f"\n{obs.goal}")
 
     if obs.revealed_documents:
         parts.append(f"Documents reviewed: {', '.join(obs.revealed_documents)}")
@@ -93,7 +126,16 @@ def build_observation_prompt(obs) -> str:
     if obs.warnings:
         parts.append(f"Warnings: {'; '.join(obs.warnings)}")
 
+    if obs.remaining_steps <= 2:
+        parts.append(
+            ">>> YOU MUST submit_final_resolution NOW. "
+            "No more investigation. Decide based on what you have. <<<"
+        )
+
     return "\n".join(parts)
+
+
+# ── LLM response parsing ────────────────────────────────────────────────
 
 
 def parse_llm_response(response_text: str) -> dict:
@@ -153,100 +195,133 @@ def build_action(params: dict) -> InvoiceGuardAction:
     return InvoiceGuardAction(**kwargs)
 
 
-def run_episode(env, client, task_id: TaskID) -> dict:
-    """Run one full episode against a task and return grading results."""
+# ── Episode runner ───────────────────────────────────────────────────────
+
+
+def run_episode(env, client: OpenAI, task_id: TaskID) -> dict:
+    """Run one full episode against a task with mandatory logging."""
     obs = env.reset(task_id=task_id.value)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    total_reward = 0.0
+    rewards: List[float] = []
     steps = 0
+    score = 0.0
+    success = False
 
-    while not obs.done:
-        user_msg = build_observation_prompt(obs)
-        messages.append({"role": "user", "content": user_msg})
+    log_start(task=task_id.value, env=BENCHMARK, model=MODEL_NAME)
 
-        try:
-            api_kwargs = {
-                "model": MODEL_NAME,
-                "messages": messages,
-                "temperature": 0.0,
-                "max_tokens": 512,
-            }
+    try:
+        while not obs.done:
+            user_msg = build_observation_prompt(obs, is_first=(steps == 0))
+            messages.append({"role": "user", "content": user_msg})
 
-            # Use JSON mode for reliable structured output when supported.
-            # Falls back gracefully if the provider doesn't support it.
             try:
-                api_kwargs["response_format"] = {"type": "json_object"}
-                response = client.chat.completions.create(**api_kwargs)
-            except Exception:
-                del api_kwargs["response_format"]
-                response = client.chat.completions.create(**api_kwargs)
+                api_kwargs = {
+                    "model": MODEL_NAME,
+                    "messages": messages,
+                    "temperature": 0.0,
+                    "max_tokens": 512,
+                }
+                try:
+                    api_kwargs["response_format"] = {"type": "json_object"}
+                    response = client.chat.completions.create(**api_kwargs)
+                except Exception:
+                    del api_kwargs["response_format"]
+                    response = client.chat.completions.create(**api_kwargs)
 
-            assistant_msg = response.choices[0].message.content or ""
+                assistant_msg = response.choices[0].message.content or ""
 
-        except Exception as e:
-            print(f"  LLM API error: {e}")
-            assistant_msg = '{"action_type": "summarize_findings"}'
+            except Exception as e:
+                print(f"[DEBUG] LLM API error: {e}", flush=True)
+                assistant_msg = '{"action_type": "summarize_findings"}'
 
-        messages.append({"role": "assistant", "content": assistant_msg})
+            messages.append({"role": "assistant", "content": assistant_msg})
 
-        params = parse_llm_response(assistant_msg)
-        action = build_action(params)
+            params = parse_llm_response(assistant_msg)
+            action = build_action(params)
 
-        obs = env.step(action)
-        total_reward += obs.reward if obs.reward else 0.0
-        steps += 1
+            obs = env.step(action)
+            reward = obs.reward if obs.reward else 0.0
+            rewards.append(reward)
+            steps += 1
 
-    grader_result = obs.metadata.get("grader_result", {})
+            error_str = None
+            if obs.last_action_error:
+                error_str = obs.last_action_result
+
+            log_step(
+                step=steps,
+                action=action.action_type.value,
+                reward=reward,
+                done=obs.done,
+                error=error_str,
+            )
+
+        grader_result = obs.metadata.get("grader_result", {})
+        score = grader_result.get("score", 0.0)
+        score = min(max(score, 0.0), 1.0)
+        success = score >= 0.5
+
+    finally:
+        log_end(success=success, steps=steps, score=score, rewards=rewards)
+
     return {
         "task_id": task_id.value,
         "steps": steps,
-        "grader_score": grader_result.get("score", 0.0),
-        "total_reward": total_reward,
+        "grader_score": score,
+        "total_reward": sum(rewards),
+        "rewards": rewards,
         "decision": env.state.final_decision,
         "exception_type": env.state.final_exception_type,
         "grader_breakdown": grader_result,
     }
 
 
-def main():
-    print("=" * 60)
-    print("InvoiceGuard — Baseline Inference")
-    print("=" * 60)
-    print(f"API Base URL: {API_BASE_URL}")
-    print(f"Model:        {MODEL_NAME}")
-    print(f"Tasks:        {len(TASK_LIST)}")
-    print()
+# ── Main ─────────────────────────────────────────────────────────────────
 
-    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+
+def main():
+    print("=" * 60, flush=True)
+    print("InvoiceGuard — Baseline Inference", flush=True)
+    print("=" * 60, flush=True)
+    print(f"API Base URL: {API_BASE_URL}", flush=True)
+    print(f"Model:        {MODEL_NAME}", flush=True)
+    print(f"Tasks:        {len(TASK_LIST)}", flush=True)
+    print(flush=True)
+
+    llm_client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
     env = InvoiceGuardEnvironment()
 
     results = []
     for task_id in TASK_LIST:
         case = get_task_case(task_id)
-        print(f"Running {task_id.value} ({case.difficulty.value})...")
         start = time.time()
 
-        result = run_episode(env, client, task_id)
+        result = run_episode(env, llm_client, task_id)
         elapsed = time.time() - start
 
-        print(f"  Score: {result['grader_score']:.4f} | "
-              f"Steps: {result['steps']} | "
-              f"Decision: {result['decision']} | "
-              f"Time: {elapsed:.1f}s")
+        print(
+            f"  >> {task_id.value}: score={result['grader_score']:.4f} "
+            f"steps={result['steps']} decision={result['decision']} "
+            f"time={elapsed:.1f}s",
+            flush=True,
+        )
         results.append(result)
 
-    print()
-    print("=" * 60)
-    print("RESULTS SUMMARY")
-    print("=" * 60)
+    print(flush=True)
+    print("=" * 60, flush=True)
+    print("RESULTS SUMMARY", flush=True)
+    print("=" * 60, flush=True)
     scores = [r["grader_score"] for r in results]
     for r in results:
-        print(f"  {r['task_id']:30s}  score={r['grader_score']:.4f}  "
-              f"decision={r['decision']}")
+        print(
+            f"  {r['task_id']:30s}  score={r['grader_score']:.4f}  "
+            f"decision={r['decision']}",
+            flush=True,
+        )
     avg = sum(scores) / len(scores) if scores else 0.0
-    print(f"\n  Average score: {avg:.4f}")
-    print(f"  Total tasks:   {len(scores)}")
-    print("=" * 60)
+    print(f"\n  Average score: {avg:.4f}", flush=True)
+    print(f"  Total tasks:   {len(scores)}", flush=True)
+    print("=" * 60, flush=True)
 
 
 if __name__ == "__main__":

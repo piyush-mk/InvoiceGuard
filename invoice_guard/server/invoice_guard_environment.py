@@ -28,11 +28,34 @@ except ImportError:
 
 
 GOAL_TEXT = (
-    "Review this supplier invoice case. Compare the invoice against the "
-    "purchase order and goods receipt note. Investigate discrepancies, then "
-    "submit a final resolution with your decision (approve_for_payment, "
-    "place_on_hold, reject_invoice, or escalate_for_supervisor_review), "
-    "the primary exception type, evidence references, and a brief explanation."
+    "You are an accounts payable analyst. Review this supplier invoice by "
+    "comparing it against the purchase order (PO) and goods receipt note (GRN).\n"
+    "\n"
+    "INVESTIGATION ACTIONS (reveal information):\n"
+    "  inspect_purchase_order — see what was ordered and at what price\n"
+    "  inspect_goods_receipt_note — see what was received at the warehouse\n"
+    "  inspect_invoice_line_items — see detailed invoice line items\n"
+    "  inspect_vendor_profile — see vendor risk tier, duplicate history, escalation thresholds\n"
+    "  inspect_policy_rules — see company tolerance thresholds and escalation rules\n"
+    "  check_for_duplicate_invoice — search for previously processed invoices\n"
+    "  compare_quantity — compare billed vs ordered vs received quantities\n"
+    "  compare_price — compare billed price vs PO-agreed price\n"
+    "  compare_totals — verify subtotal and total consistency\n"
+    "  summarize_findings — list all findings collected so far\n"
+    "  propose_exception_type — declare what type of exception you suspect\n"
+    "\n"
+    "RESOLUTION ACTION (ends the episode):\n"
+    "  submit_final_resolution — requires: final_decision, exception_type, "
+    "evidence_references, explanation\n"
+    "\n"
+    "DECISIONS:\n"
+    "  reject_invoice — duplicate invoice or fraudulent submission detected\n"
+    "  escalate_for_supervisor_review — price/total variance exceeds tolerance, "
+    "or invoice exceeds high-value threshold\n"
+    "  place_on_hold — billed quantity exceeds received quantity\n"
+    "  approve_for_payment — all documents match within tolerance\n"
+    "\n"
+    "Investigate thoroughly, then submit your resolution with evidence."
 )
 
 ALL_ACTIONS = [a.value for a in ActionType]
@@ -94,6 +117,8 @@ class InvoiceGuardEnvironment(Environment):
             f"Invoice: {inv.invoice_number}, Date: {inv.invoice_date}, "
             f"PO Ref: {inv.po_reference}, Total: ${inv.total_amount:,.2f}"
         )
+        if inv.note:
+            summary += f"\nInvoice note: {inv.note}"
 
         return InvoiceGuardObservation(
             case_id=c.case_id,
@@ -195,6 +220,23 @@ class InvoiceGuardEnvironment(Environment):
 
         if not action.final_decision:
             s.cumulative_reward += R_INVALID_ACTION
+            error_msg = (
+                "ERROR: submit_final_resolution requires all of these fields:\n"
+                '  "final_decision": one of "approve_for_payment", '
+                '"place_on_hold", "reject_invoice", "escalate_for_supervisor_review"\n'
+                '  "exception_type": one of "clean_match", "quantity_mismatch", '
+                '"price_mismatch", "partial_receipt", "duplicate_invoice", '
+                '"total_amount_mismatch", "missing_receipt", "tax_variance", '
+                '"policy_violation", "mixed_discrepancy"\n'
+                '  "evidence_references": list of action names you performed\n'
+                '  "explanation": one-sentence justification\n'
+                "Example: {\"action_type\": \"submit_final_resolution\", "
+                "\"final_decision\": \"approve_for_payment\", "
+                "\"exception_type\": \"clean_match\", "
+                "\"evidence_references\": [\"inspect_purchase_order\", "
+                "\"compare_quantity\"], "
+                "\"explanation\": \"All documents match within tolerance.\"}"
+            )
             return InvoiceGuardObservation(
                 case_id=c.case_id,
                 task_id=c.task_id.value,
@@ -205,9 +247,9 @@ class InvoiceGuardEnvironment(Environment):
                 revealed_documents=list(s.documents_revealed),
                 findings=list(s.findings_collected),
                 remaining_steps=remaining,
-                last_action_result="ERROR: submit_final_resolution requires final_decision.",
+                last_action_result=error_msg,
                 last_action_error=True,
-                warnings=[],
+                warnings=self._build_warnings(remaining),
                 done=False,
                 reward=R_INVALID_ACTION,
             )
@@ -388,6 +430,12 @@ class InvoiceGuardEnvironment(Environment):
             detail += f"\n  Tolerance Override: {vp.tolerance_override}%"
         if vp.escalation_threshold is not None:
             detail += f"\n  Escalation Threshold: ${vp.escalation_threshold:,.2f}"
+            inv_total = c.invoice.total_amount
+            if inv_total > vp.escalation_threshold:
+                detail += (
+                    f"\n  NOTE: Invoice total ${inv_total:,.2f} exceeds vendor "
+                    f"escalation threshold ${vp.escalation_threshold:,.2f}."
+                )
 
         reward = self._reveal_doc(doc, detail)
         return detail, reward
@@ -404,8 +452,26 @@ class InvoiceGuardEnvironment(Environment):
             f"  Total Amount Tolerance: ${p.total_tolerance_amt:,.2f}\n"
             f"  Duplicate Check: {'Enabled' if p.duplicate_check_enabled else 'Disabled'}\n"
             f"  High-Value Review Threshold: ${p.high_value_threshold:,.2f}\n"
-            f"  Mandatory Escalation Above: ${p.mandatory_escalation_above:,.2f}"
+            f"  Mandatory Escalation Above: ${p.mandatory_escalation_above:,.2f}\n"
+            f"\n"
+            f"  Resolution Rules:\n"
+            f"    - APPROVE: All matches within tolerance, no duplicates, no policy violations.\n"
+            f"    - HOLD: Billed quantity exceeds received quantity (partial/missing receipt).\n"
+            f"    - ESCALATE: Price or total variance exceeds tolerance. Invoice above high-value threshold.\n"
+            f"    - REJECT: Duplicate invoice detected. Fraudulent or invalid submission."
         )
+
+        inv_total = c.invoice.total_amount
+        if inv_total >= p.high_value_threshold:
+            detail += (
+                f"\n\n  NOTE: Invoice total ${inv_total:,.2f} exceeds "
+                f"high-value threshold ${p.high_value_threshold:,.2f}. "
+                f"Supervisor review required."
+            )
+            self._add_finding(
+                f"High-value invoice: ${inv_total:,.2f} exceeds "
+                f"review threshold ${p.high_value_threshold:,.2f}."
+            )
 
         reward = self._reveal_doc(doc, detail)
         return detail, reward
@@ -502,11 +568,18 @@ class InvoiceGuardEnvironment(Environment):
                     po_price = po_li.unit_price_ordered
                     break
 
-            line = (
-                f"  {inv_li.item_code}: "
-                f"Billed=${inv_li.unit_price_billed:,.2f}, "
-                f"PO Price=${po_price:,.2f}" if po_price else f"PO Price=N/A"
-            )
+            if po_price is not None:
+                line = (
+                    f"  {inv_li.item_code}: "
+                    f"Billed=${inv_li.unit_price_billed:,.2f}, "
+                    f"PO Price=${po_price:,.2f}"
+                )
+            else:
+                line = (
+                    f"  {inv_li.item_code}: "
+                    f"Billed=${inv_li.unit_price_billed:,.2f}, "
+                    f"PO Price=N/A"
+                )
 
             if po_price is not None and po_price > 0:
                 variance_pct = (
@@ -524,6 +597,10 @@ class InvoiceGuardEnvironment(Environment):
                         f"PO ${po_price:,.2f} "
                         f"({variance_pct:+.1f}% variance, "
                         f"tolerance is {tolerance}%)."
+                    )
+                    self._add_finding(
+                        f"POLICY: Price variance exceeding {tolerance}% tolerance "
+                        f"requires escalation for supervisor review."
                     )
                 else:
                     line += f" → Within tolerance ({variance_pct:+.1f}%)"
@@ -567,6 +644,10 @@ class InvoiceGuardEnvironment(Environment):
                     f"Total discrepancy: invoice subtotal ${inv.subtotal:,.2f} vs "
                     f"PO total ${po_total:,.2f} (difference ${total_diff:+,.2f} "
                     f"exceeds tolerance ${tolerance_amt:,.2f})."
+                )
+                self._add_finding(
+                    "POLICY: Total amount variance exceeding tolerance "
+                    "requires escalation for supervisor review."
                 )
 
         detail = "Totals comparison:\n" + "\n".join(lines)
@@ -614,13 +695,17 @@ class InvoiceGuardEnvironment(Environment):
 
     def _build_warnings(self, remaining: int) -> list:
         warnings = []
-        if remaining <= 2:
-            warnings.append(f"WARNING: Only {remaining} step(s) remaining!")
         s = self._env_state
-        if remaining <= 3 and not s.is_finalized and not any(
-            a == ActionType.submit_final_resolution.value for a in s.actions_taken
-        ):
-            warnings.append("Consider submitting your final resolution soon.")
+        if remaining <= 2:
+            warnings.append(
+                f"CRITICAL: Only {remaining} step(s) remaining! "
+                f"You MUST submit_final_resolution NOW."
+            )
+        elif remaining <= 4 and not s.is_finalized:
+            warnings.append(
+                f"WARNING: {remaining} steps remaining. "
+                f"Submit your final resolution soon."
+            )
         return warnings
 
     def _error_obs(self, message: str) -> InvoiceGuardObservation:

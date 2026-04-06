@@ -1,5 +1,6 @@
 spec_version: 1
 name: invoice_guard
+description: Three-way invoice matching exception resolution environment. An AI agent investigates multi-document AP cases to detect discrepancies and render policy-compliant decisions.
 type: space
 runtime: fastapi
 app: server.app:app

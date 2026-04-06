@@ -136,9 +136,9 @@ def _partial_decision_credit(agent: str, correct: str) -> float:
     e.g. escalate when hold was correct is better than approve when hold was correct.
     """
     RELATED_DECISIONS = {
-        "place_on_hold": {"escalate_for_supervisor_review": 0.3, "reject_invoice": 0.2},
-        "escalate_for_supervisor_review": {"place_on_hold": 0.3, "reject_invoice": 0.2},
-        "reject_invoice": {"escalate_for_supervisor_review": 0.2, "place_on_hold": 0.15},
+        "place_on_hold": {"escalate_for_supervisor_review": 0.2, "reject_invoice": 0.15},
+        "escalate_for_supervisor_review": {"place_on_hold": 0.2, "reject_invoice": 0.15},
+        "reject_invoice": {"escalate_for_supervisor_review": 0.2, "place_on_hold": 0.1},
         "approve_for_payment": {},
     }
     related = RELATED_DECISIONS.get(correct, {})
@@ -153,13 +153,17 @@ def _score_evidence(
     if not acceptable_evidence:
         return 1.0
 
-    covered = 0
-    all_refs = set(agent_evidence) | set(actions_taken)
-    for required in acceptable_evidence:
-        if required in all_refs:
-            covered += 1
+    cited_set = set(agent_evidence)
+    taken_set = set(actions_taken)
+    total = 0.0
 
-    return covered / len(acceptable_evidence)
+    for required in acceptable_evidence:
+        if required in cited_set:
+            total += 1.0
+        elif required in taken_set:
+            total += 0.7
+
+    return min(total / len(acceptable_evidence), 1.0)
 
 
 def _score_investigation(

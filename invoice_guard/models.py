@@ -58,12 +58,22 @@ class ExceptionType(str, Enum):
 
 
 class TaskID(str, Enum):
-    """Identifiers for the four evaluation tasks."""
+    """Identifiers for evaluation tasks (4 canonical + variants)."""
 
     task_1_clean_match = "task_1_clean_match"
+    task_1b_multi_line_clean = "task_1b_multi_line_clean"
+    task_1c_preferred_vendor_clean = "task_1c_preferred_vendor_clean"
     task_2_partial_receipt = "task_2_partial_receipt"
+    task_2b_missing_receipt = "task_2b_missing_receipt"
+    task_2c_over_receipt = "task_2c_over_receipt"
     task_3_price_variance = "task_3_price_variance"
+    task_3b_within_tolerance = "task_3b_within_tolerance"
+    task_3c_total_mismatch = "task_3c_total_mismatch"
     task_4_duplicate_invoice = "task_4_duplicate_invoice"
+    task_4b_corrected_invoice_trap = "task_4b_corrected_invoice_trap"
+    task_4c_policy_violation = "task_4c_policy_violation"
+    task_5_mixed_discrepancy = "task_5_mixed_discrepancy"
+    task_6_false_positive_duplicate = "task_6_false_positive_duplicate"
 
 
 class Difficulty(str, Enum):
