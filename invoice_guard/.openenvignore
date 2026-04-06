@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 .venv/
 inference.py
+test_live_space.py

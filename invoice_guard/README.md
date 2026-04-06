@@ -203,20 +203,33 @@ openenv push
 
 ## Baseline Scores
 
-Results from baseline inference with `gpt-4o-mini`:
+### gpt-4o-mini
 
 | Task | Score | Decision | Steps |
 |------|-------|----------|-------|
-| `task_1_clean_match` | 0.94+ | `approve_for_payment` | 5-7 |
-| `task_2_partial_receipt` | 0.94+ | `place_on_hold` | 5-7 |
-| `task_3_price_variance` | 0.90+ | `escalate_for_supervisor_review` | 6-8 |
-| `task_4_duplicate_invoice` | 0.94+ | `reject_invoice` | 5-7 |
-| `task_5_mixed_discrepancy` | 0.70+ | `escalate_for_supervisor_review` | 6-8 |
-| `task_6_false_positive_duplicate` | 0.35 | varies | 6-8 |
+| `task_1_clean_match` | 0.95 | `approve_for_payment` | 9 |
+| `task_2_partial_receipt` | 0.75 | `place_on_hold` | 8 |
+| `task_3_price_variance` | 0.75 | `escalate_for_supervisor_review` | 8 |
+| `task_4_duplicate_invoice` | 0.98 | `reject_invoice` | 8 |
+| `task_5_mixed_discrepancy` | 0.78 | `escalate_for_supervisor_review` | 9 |
+| `task_6_false_positive_duplicate` | 0.35 | `reject_invoice` (incorrect) | 10 |
 
-Average across 6 canonical tasks: **~0.76**
+Average: **0.76**
 
-Tasks 5 and 6 are intentionally harder: task 5 presents conflicting signals (partial receipt + price variance) requiring policy-aware prioritization; task 6 uses a false-positive duplicate trap where many agents incorrectly reject a legitimate invoice.
+### gpt-4o
+
+| Task | Score | Decision | Steps |
+|------|-------|----------|-------|
+| `task_1_clean_match` | 0.95 | `approve_for_payment` | 8 |
+| `task_2_partial_receipt` | 0.78 | `place_on_hold` | 7 |
+| `task_3_price_variance` | 0.78 | `escalate_for_supervisor_review` | 7 |
+| `task_4_duplicate_invoice` | 0.86 | `reject_invoice` | 9 |
+| `task_5_mixed_discrepancy` | 0.78 | `escalate_for_supervisor_review` | 7 |
+| `task_6_false_positive_duplicate` | 0.95 | `approve_for_payment` | 10 |
+
+Average: **0.85**
+
+Task 6 demonstrates strong model discrimination: gpt-4o correctly identifies the false-positive duplicate as a legitimate invoice, while gpt-4o-mini falls for the trap.
 
 ## Project Structure
 
