@@ -1,7 +1,7 @@
 """
 InvoiceGuard — Baseline Inference Script.
 
-Runs a baseline LLM agent against all four tasks and reports per-task
+Runs a baseline LLM agent against all canonical tasks and reports per-task
 and overall grader scores. Uses the OpenAI API client as required by
 the hackathon guidelines.
 
@@ -10,14 +10,15 @@ STDOUT FORMAT (mandatory):
     [STEP]  step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
     [END]   success=<true|false> steps=<n> score=<score> rewards=<r1,r2,...,rn>
 
-Environment variables:
+Environment variables (mandatory):
     API_BASE_URL       — LLM API endpoint (default: https://api.openai.com/v1)
     MODEL_NAME         — model identifier (default: gpt-4o-mini)
-    HF_TOKEN           — Hugging Face token / fallback API key
-    OPENAI_API_KEY     — API key for the LLM provider
-    LOCAL_IMAGE_NAME   — Docker image name (if using from_docker_image mode)
+    HF_TOKEN           — Hugging Face token / primary API key
+    OPENAI_API_KEY     — Fallback API key for the LLM provider
+    LOCAL_IMAGE_NAME   — Docker image name (uses from_docker_image when set)
 """
 
+import asyncio
 import json
 import os
 import sys
@@ -31,14 +32,13 @@ from models import (
     ActionType, DecisionType, ExceptionType, InvoiceGuardAction, TaskID,
 )
 from tasks import get_task_case, TASK_LIST
-from server.invoice_guard_environment import InvoiceGuardEnvironment
 
 load_dotenv()
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
 HF_TOKEN = os.getenv("HF_TOKEN", "")
-API_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("HF_TOKEN") or ""
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY") or ""
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME", "")
 
 BENCHMARK = "invoice_guard"
@@ -195,17 +195,30 @@ def build_action(params: dict) -> InvoiceGuardAction:
     return InvoiceGuardAction(**kwargs)
 
 
-# ── Episode runner ───────────────────────────────────────────────────────
+# ── Observation extraction helpers ───────────────────────────────────────
 
 
-def run_episode(env, client: OpenAI, task_id: TaskID) -> dict:
-    """Run one full episode against a task with mandatory logging."""
+def _obs_from_step_result(result):
+    """Extract observation from an EnvClient StepResult, copying reward/done."""
+    obs = result.observation
+    obs.reward = result.reward
+    obs.done = result.done
+    return obs
+
+
+# ── Episode runner (local, synchronous) ──────────────────────────────────
+
+
+def run_episode_local(env, client: OpenAI, task_id: TaskID) -> dict:
+    """Run one full episode against the local environment."""
     obs = env.reset(task_id=task_id.value)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     rewards: List[float] = []
     steps = 0
     score = 0.0
     success = False
+    last_decision = None
+    last_exception = None
 
     log_start(task=task_id.value, env=BENCHMARK, model=MODEL_NAME)
 
@@ -237,6 +250,10 @@ def run_episode(env, client: OpenAI, task_id: TaskID) -> dict:
             messages.append({"role": "assistant", "content": assistant_msg})
 
             params = parse_llm_response(assistant_msg)
+            if params.get("final_decision"):
+                last_decision = params["final_decision"]
+            if params.get("exception_type"):
+                last_exception = params["exception_type"]
             action = build_action(params)
 
             obs = env.step(action)
@@ -256,8 +273,8 @@ def run_episode(env, client: OpenAI, task_id: TaskID) -> dict:
                 error=error_str,
             )
 
-        grader_result = obs.metadata.get("grader_result", {})
-        score = grader_result.get("score", 0.0)
+        grader_data = getattr(obs, "grader_result", None) or obs.metadata.get("grader_result", {})
+        score = grader_data.get("score", 0.0) if isinstance(grader_data, dict) else 0.0
         score = min(max(score, 0.0), 1.0)
         success = score >= 0.5
 
@@ -270,43 +287,117 @@ def run_episode(env, client: OpenAI, task_id: TaskID) -> dict:
         "grader_score": score,
         "total_reward": sum(rewards),
         "rewards": rewards,
-        "decision": env.state.final_decision,
-        "exception_type": env.state.final_exception_type,
-        "grader_breakdown": grader_result,
+        "decision": last_decision,
+        "exception_type": last_exception,
+        "grader_breakdown": grader_data,
+    }
+
+
+# ── Episode runner (Docker, asynchronous) ────────────────────────────────
+
+
+async def run_episode_docker(env, client: OpenAI, task_id: TaskID) -> dict:
+    """Run one full episode against a Docker-based environment via EnvClient."""
+    result = await env.reset(task_id=task_id.value)
+    obs = _obs_from_step_result(result)
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    rewards: List[float] = []
+    steps = 0
+    score = 0.0
+    success = False
+    last_decision = None
+    last_exception = None
+
+    log_start(task=task_id.value, env=BENCHMARK, model=MODEL_NAME)
+
+    try:
+        while not obs.done:
+            user_msg = build_observation_prompt(obs, is_first=(steps == 0))
+            messages.append({"role": "user", "content": user_msg})
+
+            try:
+                api_kwargs = {
+                    "model": MODEL_NAME,
+                    "messages": messages,
+                    "temperature": 0.0,
+                    "max_tokens": 512,
+                }
+                try:
+                    api_kwargs["response_format"] = {"type": "json_object"}
+                    response = client.chat.completions.create(**api_kwargs)
+                except Exception:
+                    del api_kwargs["response_format"]
+                    response = client.chat.completions.create(**api_kwargs)
+
+                assistant_msg = response.choices[0].message.content or ""
+
+            except Exception as e:
+                print(f"[DEBUG] LLM API error: {e}", flush=True)
+                assistant_msg = '{"action_type": "summarize_findings"}'
+
+            messages.append({"role": "assistant", "content": assistant_msg})
+
+            params = parse_llm_response(assistant_msg)
+            if params.get("final_decision"):
+                last_decision = params["final_decision"]
+            if params.get("exception_type"):
+                last_exception = params["exception_type"]
+            action = build_action(params)
+
+            result = await env.step(action)
+            obs = _obs_from_step_result(result)
+            reward = obs.reward if obs.reward else 0.0
+            rewards.append(reward)
+            steps += 1
+
+            error_str = None
+            if obs.last_action_error:
+                error_str = obs.last_action_result
+
+            log_step(
+                step=steps,
+                action=action.action_type.value,
+                reward=reward,
+                done=obs.done,
+                error=error_str,
+            )
+
+        grader_data = getattr(obs, "grader_result", None) or obs.metadata.get("grader_result", {})
+        score = grader_data.get("score", 0.0) if isinstance(grader_data, dict) else 0.0
+        score = min(max(score, 0.0), 1.0)
+        success = score >= 0.5
+
+    finally:
+        log_end(success=success, steps=steps, score=score, rewards=rewards)
+
+    return {
+        "task_id": task_id.value,
+        "steps": steps,
+        "grader_score": score,
+        "total_reward": sum(rewards),
+        "rewards": rewards,
+        "decision": last_decision,
+        "exception_type": last_exception,
+        "grader_breakdown": grader_data,
     }
 
 
 # ── Main ─────────────────────────────────────────────────────────────────
 
 
-def main():
+def _print_header():
     print("=" * 60, flush=True)
     print("InvoiceGuard — Baseline Inference", flush=True)
     print("=" * 60, flush=True)
     print(f"API Base URL: {API_BASE_URL}", flush=True)
     print(f"Model:        {MODEL_NAME}", flush=True)
     print(f"Tasks:        {len(TASK_LIST)}", flush=True)
+    mode = f"docker ({LOCAL_IMAGE_NAME})" if LOCAL_IMAGE_NAME else "local"
+    print(f"Mode:         {mode}", flush=True)
     print(flush=True)
 
-    llm_client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-    env = InvoiceGuardEnvironment()
 
-    results = []
-    for task_id in TASK_LIST:
-        case = get_task_case(task_id)
-        start = time.time()
-
-        result = run_episode(env, llm_client, task_id)
-        elapsed = time.time() - start
-
-        print(
-            f"  >> {task_id.value}: score={result['grader_score']:.4f} "
-            f"steps={result['steps']} decision={result['decision']} "
-            f"time={elapsed:.1f}s",
-            flush=True,
-        )
-        results.append(result)
-
+def _print_results(results):
     print(flush=True)
     print("=" * 60, flush=True)
     print("RESULTS SUMMARY", flush=True)
@@ -324,5 +415,63 @@ def main():
     print("=" * 60, flush=True)
 
 
+async def main_docker():
+    """Run inference against a Docker container via EnvClient."""
+    from client import InvoiceGuardEnv
+
+    _print_header()
+    llm_client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+
+    env = await InvoiceGuardEnv.from_docker_image(LOCAL_IMAGE_NAME)
+
+    results = []
+    try:
+        for task_id in TASK_LIST:
+            start = time.time()
+            result = await run_episode_docker(env, llm_client, task_id)
+            elapsed = time.time() - start
+            print(
+                f"  >> {task_id.value}: score={result['grader_score']:.4f} "
+                f"steps={result['steps']} decision={result['decision']} "
+                f"time={elapsed:.1f}s",
+                flush=True,
+            )
+            results.append(result)
+    finally:
+        try:
+            await env.close()
+        except Exception as e:
+            print(f"[DEBUG] env.close() error: {e}", flush=True)
+
+    _print_results(results)
+
+
+def main_local():
+    """Run inference directly against the local environment."""
+    from server.invoice_guard_environment import InvoiceGuardEnvironment
+
+    _print_header()
+    llm_client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+    env = InvoiceGuardEnvironment()
+
+    results = []
+    for task_id in TASK_LIST:
+        start = time.time()
+        result = run_episode_local(env, llm_client, task_id)
+        elapsed = time.time() - start
+        print(
+            f"  >> {task_id.value}: score={result['grader_score']:.4f} "
+            f"steps={result['steps']} decision={result['decision']} "
+            f"time={elapsed:.1f}s",
+            flush=True,
+        )
+        results.append(result)
+
+    _print_results(results)
+
+
 if __name__ == "__main__":
-    main()
+    if LOCAL_IMAGE_NAME:
+        asyncio.run(main_docker())
+    else:
+        main_local()

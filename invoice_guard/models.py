@@ -222,6 +222,7 @@ class InvoiceGuardObservation(Observation):
     last_action_result: str = ""
     last_action_error: bool = False
     warnings: List[str] = Field(default_factory=list)
+    grader_result: Dict[str, Any] = Field(default_factory=dict)
 
 
 # ── OpenEnv State ───────────────────────────────────────────────────────────

@@ -283,6 +283,7 @@ class InvoiceGuardEnvironment(Environment):
             warnings=[],
             done=True,
             reward=grader_result.score,
+            grader_result=grader_result.model_dump(),
             metadata={
                 "grader_result": grader_result.model_dump(),
                 "cumulative_reward": s.cumulative_reward,
@@ -312,6 +313,7 @@ class InvoiceGuardEnvironment(Environment):
             warnings=[],
             done=True,
             reward=max(grader_result.score + R_TIMEOUT_PENALTY, 0.0),
+            grader_result=grader_result.model_dump(),
             metadata={
                 "grader_result": grader_result.model_dump(),
                 "cumulative_reward": s.cumulative_reward,

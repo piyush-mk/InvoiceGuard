@@ -6,11 +6,18 @@ from openenv.core import EnvClient
 from openenv.core.client_types import StepResult
 from openenv.core.env_server.types import State
 
-from .models import (
-    InvoiceGuardAction,
-    InvoiceGuardObservation,
-    InvoiceGuardState,
-)
+try:
+    from .models import (
+        InvoiceGuardAction,
+        InvoiceGuardObservation,
+        InvoiceGuardState,
+    )
+except (ImportError, ModuleNotFoundError):
+    from models import (
+        InvoiceGuardAction,
+        InvoiceGuardObservation,
+        InvoiceGuardState,
+    )
 
 
 class InvoiceGuardEnv(
@@ -43,6 +50,7 @@ class InvoiceGuardEnv(
             last_action_result=obs_data.get("last_action_result", ""),
             last_action_error=obs_data.get("last_action_error", False),
             warnings=obs_data.get("warnings", []),
+            grader_result=obs_data.get("grader_result", {}),
             done=payload.get("done", False),
             reward=payload.get("reward"),
             metadata=obs_data.get("metadata", {}),
