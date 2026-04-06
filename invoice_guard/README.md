@@ -1,6 +1,6 @@
 ---
 title: Invoice Guard Environment Server
-emoji: 
+emoji: 📋
 colorFrom: purple
 colorTo: yellow
 sdk: docker
