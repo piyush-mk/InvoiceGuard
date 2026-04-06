@@ -71,7 +71,7 @@ def get_task_case(task_id: TaskID) -> CaseData:
     return builders[task_id]()
 
 
-# ── Task 1: Clean Match Approval ────────────────────────────────────────────
+# -- Task 1: Clean Match Approval --------------------------------------------
 # Difficulty: easy | Decision: approve_for_payment | Exception: clean_match
 # All three documents align within tolerance. Tests whether the agent can
 # confirm a clean case without inventing problems.
@@ -157,7 +157,7 @@ def _build_task_1() -> CaseData:
     )
 
 
-# ── Task 2: Quantity & Partial Receipt Hold ──────────────────────────────────
+# -- Task 2: Quantity & Partial Receipt Hold ----------------------------------
 # Difficulty: moderate | Decision: place_on_hold | Exception: partial_receipt
 # Invoice bills 100 units, PO ordered 100, but GRN only received 60.
 # Agent must recognize billed qty exceeds received qty.
@@ -248,7 +248,7 @@ def _build_task_2() -> CaseData:
     )
 
 
-# ── Task 3: Price Variance with Policy Tolerance ────────────────────────────
+# -- Task 3: Price Variance with Policy Tolerance ----------------------------
 # Difficulty: moderate | Decision: escalate_for_supervisor_review
 # Exception: price_mismatch
 # Invoice unit price is $110 vs PO price of $100 (10% variance).
@@ -343,7 +343,7 @@ def _build_task_3() -> CaseData:
     )
 
 
-# ── Task 4: Duplicate Invoice with Mixed Signals ────────────────────────────
+# -- Task 4: Duplicate Invoice with Mixed Signals ----------------------------
 # Difficulty: hard | Decision: reject_invoice | Exception: duplicate_invoice
 # Quantities and prices match perfectly, but case history reveals a
 # previously processed invoice with near-identical details. A misleading
@@ -445,12 +445,12 @@ def _build_task_4() -> CaseData:
     )
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+# ===========================================================================
 # VARIANT TASKS
-# ═══════════════════════════════════════════════════════════════════════════
+# ===========================================================================
 
 
-# ── Task 1b: Multi-Line Clean Match ──────────────────────────────────────
+# -- Task 1b: Multi-Line Clean Match --------------------------------------
 # Three line items, all matching. Tests multi-item verification.
 
 def _build_task_1b() -> CaseData:
@@ -558,7 +558,7 @@ def _build_task_1b() -> CaseData:
     )
 
 
-# ── Task 1c: Preferred Vendor Clean Match ────────────────────────────────
+# -- Task 1c: Preferred Vendor Clean Match --------------------------------
 # Single item, low-risk preferred vendor, very straightforward.
 
 def _build_task_1c() -> CaseData:
@@ -636,7 +636,7 @@ def _build_task_1c() -> CaseData:
     )
 
 
-# ── Task 2b: Missing Receipt (GRN shows 0 received) ─────────────────────
+# -- Task 2b: Missing Receipt (GRN shows 0 received) ---------------------
 # GRN was filed but zero units accepted. Decision: hold.
 
 def _build_task_2b() -> CaseData:
@@ -722,7 +722,7 @@ def _build_task_2b() -> CaseData:
     )
 
 
-# ── Task 2c: Over-Receipt (billed more than ordered, received matches ordered) ─
+# -- Task 2c: Over-Receipt (billed more than ordered, received matches ordered) -
 # Billed 120 but PO was 100 and GRN accepted 100. Overbilling.
 
 def _build_task_2c() -> CaseData:
@@ -807,7 +807,7 @@ def _build_task_2c() -> CaseData:
     )
 
 
-# ── Task 3b: Price Within Tolerance (should approve) ─────────────────────
+# -- Task 3b: Price Within Tolerance (should approve) ---------------------
 # Price is 2% above PO, which is within the 5% tolerance. Clean approval.
 
 def _build_task_3b() -> CaseData:
@@ -888,7 +888,7 @@ def _build_task_3b() -> CaseData:
     )
 
 
-# ── Task 3c: Total Amount Mismatch ──────────────────────────────────────
+# -- Task 3c: Total Amount Mismatch --------------------------------------
 # Line-item prices match, but the invoice subtotal is inflated (arithmetic error).
 
 def _build_task_3c() -> CaseData:
@@ -915,7 +915,7 @@ def _build_task_3c() -> CaseData:
             subtotal=3500.00,
             tax=280.00,
             total_amount=3780.00,
-            note="Bulk order — standard pricing applied.",
+            note="Bulk order -- standard pricing applied.",
         ),
         purchase_order=PurchaseOrder(
             po_number="PO-7300",
@@ -968,7 +968,7 @@ def _build_task_3c() -> CaseData:
     )
 
 
-# ── Task 4b: Corrected Invoice Trap ──────────────────────────────────────
+# -- Task 4b: Corrected Invoice Trap --------------------------------------
 # Invoice claims to be a "corrected version" of a prior invoice, but the
 # prior invoice was already paid. Still a duplicate.
 
@@ -996,7 +996,7 @@ def _build_task_4b() -> CaseData:
             subtotal=1350.00,
             tax=108.00,
             total_amount=1458.00,
-            note="CORRECTED INVOICE — replaces INV-2024-0600. Please disregard previous version.",
+            note="CORRECTED INVOICE -- replaces INV-2024-0600. Please disregard previous version.",
         ),
         purchase_order=PurchaseOrder(
             po_number="PO-8900",
@@ -1058,7 +1058,7 @@ def _build_task_4b() -> CaseData:
     )
 
 
-# ── Task 4c: Policy Violation (high-value without authorization) ─────────
+# -- Task 4c: Policy Violation (high-value without authorization) ---------
 # Invoice total exceeds high-value threshold. Everything else matches,
 # but policy requires escalation for high-value invoices.
 
@@ -1141,12 +1141,12 @@ def _build_task_4c() -> CaseData:
     )
 
 
-# ═══════════════════════════════════════════════════════════════════════════
+# ===========================================================================
 # GENUINELY HARD TASKS
-# ═══════════════════════════════════════════════════════════════════════════
+# ===========================================================================
 
 
-# ── Task 5: Mixed Discrepancy (price over tolerance + partial receipt) ───
+# -- Task 5: Mixed Discrepancy (price over tolerance + partial receipt) ---
 # Difficulty: hard | Decision: escalate_for_supervisor_review
 # Exception: mixed_discrepancy
 #
@@ -1250,13 +1250,13 @@ def _build_task_5() -> CaseData:
     )
 
 
-# ── Task 6: False Positive Duplicate (legitimate second order) ───────────
+# -- Task 6: False Positive Duplicate (legitimate second order) -----------
 # Difficulty: hard | Decision: approve_for_payment
 # Exception: clean_match
 #
 # This case is designed to trap agents that rely on superficial pattern
 # matching. The invoice is from the SAME supplier, for the SAME item,
-# with a SIMILAR amount — but references a DIFFERENT PO number. The case
+# with a SIMILAR amount -- but references a DIFFERENT PO number. The case
 # history has a processed invoice for PO-9600, but this invoice is for
 # PO-9700 (a separate legitimate order). The vendor note mentioning
 # "same as last month" is a red herring.
@@ -1288,7 +1288,7 @@ def _build_task_6() -> CaseData:
             subtotal=4500.00,
             tax=360.00,
             total_amount=4860.00,
-            note="Monthly service invoice — same as last month's order.",
+            note="Monthly service invoice -- same as last month's order.",
         ),
         purchase_order=PurchaseOrder(
             po_number="PO-9700",
@@ -1351,7 +1351,7 @@ def _build_task_6() -> CaseData:
                 "Invoice references PO-9700, which is a separate order from prior PO-9600",
                 "Prior invoice INV-2024-0880 was for a different PO (different month)",
                 "Quantities and prices match PO exactly",
-                "No actual duplicate — this is a legitimate recurring service invoice",
+                "No actual duplicate -- this is a legitimate recurring service invoice",
                 "Vendor has 0 duplicate risk incidents",
             ],
         ),

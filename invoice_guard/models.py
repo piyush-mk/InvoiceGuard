@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from openenv.core.env_server.types import Action, Observation, State
 
 
-# ── Enums ────────────────────────────────────────────────────────────────────
+# -- Enums --------------------------------------------------------------------
 
 
 class ActionType(str, Enum):
@@ -84,7 +84,7 @@ class Difficulty(str, Enum):
     hard = "hard"
 
 
-# ── Business Entities ────────────────────────────────────────────────────────
+# -- Business Entities --------------------------------------------------------
 
 
 class InvoiceLineItem(BaseModel):
@@ -167,7 +167,7 @@ class CaseHistory(BaseModel):
     pending_invoice_numbers: List[str] = Field(default_factory=list)
 
 
-# ── Ground Truth & Case Data ────────────────────────────────────────────────
+# -- Ground Truth & Case Data ------------------------------------------------
 
 
 class GroundTruth(BaseModel):
@@ -191,7 +191,7 @@ class CaseData(BaseModel):
     ground_truth: GroundTruth
 
 
-# ── OpenEnv Action ──────────────────────────────────────────────────────────
+# -- OpenEnv Action ----------------------------------------------------------
 
 
 class InvoiceGuardAction(Action):
@@ -204,7 +204,7 @@ class InvoiceGuardAction(Action):
     explanation: str = ""
 
 
-# ── OpenEnv Observation ─────────────────────────────────────────────────────
+# -- OpenEnv Observation -----------------------------------------------------
 
 
 class InvoiceGuardObservation(Observation):
@@ -225,7 +225,7 @@ class InvoiceGuardObservation(Observation):
     grader_result: Dict[str, Any] = Field(default_factory=dict)
 
 
-# ── OpenEnv State ───────────────────────────────────────────────────────────
+# -- OpenEnv State -----------------------------------------------------------
 
 
 class InvoiceGuardState(State):
@@ -248,7 +248,7 @@ class InvoiceGuardState(State):
     repeated_action_counts: Dict[str, int] = Field(default_factory=dict)
 
 
-# ── Grader Result ───────────────────────────────────────────────────────────
+# -- Grader Result -----------------------------------------------------------
 
 
 class GraderResult(BaseModel):

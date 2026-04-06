@@ -1,5 +1,5 @@
 """
-InvoiceGuard Environment — Three-Way Invoice Matching Exception Resolution.
+InvoiceGuard Environment -- Three-Way Invoice Matching Exception Resolution.
 
 An agent reviews one supplier invoice case per episode by comparing the
 invoice, purchase order, and goods receipt note, then resolves the case.
@@ -32,28 +32,28 @@ GOAL_TEXT = (
     "comparing it against the purchase order (PO) and goods receipt note (GRN).\n"
     "\n"
     "INVESTIGATION ACTIONS (reveal information):\n"
-    "  inspect_purchase_order — see what was ordered and at what price\n"
-    "  inspect_goods_receipt_note — see what was received at the warehouse\n"
-    "  inspect_invoice_line_items — see detailed invoice line items\n"
-    "  inspect_vendor_profile — see vendor risk tier, duplicate history, escalation thresholds\n"
-    "  inspect_policy_rules — see company tolerance thresholds and escalation rules\n"
-    "  check_for_duplicate_invoice — search for previously processed invoices\n"
-    "  compare_quantity — compare billed vs ordered vs received quantities\n"
-    "  compare_price — compare billed price vs PO-agreed price\n"
-    "  compare_totals — verify subtotal and total consistency\n"
-    "  summarize_findings — list all findings collected so far\n"
-    "  propose_exception_type — declare what type of exception you suspect\n"
+    "  inspect_purchase_order -- see what was ordered and at what price\n"
+    "  inspect_goods_receipt_note -- see what was received at the warehouse\n"
+    "  inspect_invoice_line_items -- see detailed invoice line items\n"
+    "  inspect_vendor_profile -- see vendor risk tier, duplicate history, escalation thresholds\n"
+    "  inspect_policy_rules -- see company tolerance thresholds and escalation rules\n"
+    "  check_for_duplicate_invoice -- search for previously processed invoices\n"
+    "  compare_quantity -- compare billed vs ordered vs received quantities\n"
+    "  compare_price -- compare billed price vs PO-agreed price\n"
+    "  compare_totals -- verify subtotal and total consistency\n"
+    "  summarize_findings -- list all findings collected so far\n"
+    "  propose_exception_type -- declare what type of exception you suspect\n"
     "\n"
     "RESOLUTION ACTION (ends the episode):\n"
-    "  submit_final_resolution — requires: final_decision, exception_type, "
+    "  submit_final_resolution -- requires: final_decision, exception_type, "
     "evidence_references, explanation\n"
     "\n"
     "DECISIONS:\n"
-    "  reject_invoice — duplicate invoice or fraudulent submission detected\n"
-    "  escalate_for_supervisor_review — price/total variance exceeds tolerance, "
+    "  reject_invoice -- duplicate invoice or fraudulent submission detected\n"
+    "  escalate_for_supervisor_review -- price/total variance exceeds tolerance, "
     "or invoice exceeds high-value threshold\n"
-    "  place_on_hold — billed quantity exceeds received quantity\n"
-    "  approve_for_payment — all documents match within tolerance\n"
+    "  place_on_hold -- billed quantity exceeds received quantity\n"
+    "  approve_for_payment -- all documents match within tolerance\n"
     "\n"
     "Investigate thoroughly, then submit your resolution with evidence."
 )
@@ -210,7 +210,7 @@ class InvoiceGuardEnvironment(Environment):
     def state(self) -> InvoiceGuardState:
         return self._env_state
 
-    # ── Terminal handlers ────────────────────────────────────────────────
+    # -- Terminal handlers ------------------------------------------------
 
     def _handle_submit(
         self, action: InvoiceGuardAction, remaining: int
@@ -339,7 +339,7 @@ class InvoiceGuardEnvironment(Environment):
             finding = f"Proposed exception type: {s.proposed_exception} (noted)."
             return finding, 0.0
 
-    # ── Investigation handlers ───────────────────────────────────────────
+    # -- Investigation handlers -------------------------------------------
 
     def _inspect_invoice_line_items(self, is_repeat: bool) -> tuple:
         c = self._case
@@ -423,7 +423,7 @@ class InvoiceGuardEnvironment(Environment):
         vp = c.vendor_profile
 
         detail = (
-            f"Vendor Profile — {vp.supplier_name} ({vp.supplier_id}):\n"
+            f"Vendor Profile -- {vp.supplier_name} ({vp.supplier_id}):\n"
             f"  Risk Tier: {vp.risk_tier}\n"
             f"  Preferred Vendor: {vp.preferred_vendor}\n"
             f"  Duplicate Risk History: {vp.duplicate_risk_count} incidents"
@@ -533,7 +533,7 @@ class InvoiceGuardEnvironment(Environment):
             if grn_qty is not None and inv_li.quantity_billed > grn_qty:
                 diff = inv_li.quantity_billed - grn_qty
                 pct = (diff / inv_li.quantity_billed) * 100
-                line += f" → DISCREPANCY: Billed exceeds received by {diff:.0f} units ({pct:.1f}%)"
+                line += f" -> DISCREPANCY: Billed exceeds received by {diff:.0f} units ({pct:.1f}%)"
                 has_discrepancy = True
                 self._add_finding(
                     f"Quantity discrepancy on {inv_li.item_code}: "
@@ -542,14 +542,14 @@ class InvoiceGuardEnvironment(Environment):
                 )
             elif po_qty is not None and inv_li.quantity_billed > po_qty:
                 diff = inv_li.quantity_billed - po_qty
-                line += f" → DISCREPANCY: Billed exceeds ordered by {diff:.0f} units"
+                line += f" -> DISCREPANCY: Billed exceeds ordered by {diff:.0f} units"
                 has_discrepancy = True
                 self._add_finding(
                     f"Quantity discrepancy on {inv_li.item_code}: "
                     f"billed {inv_li.quantity_billed} but only {po_qty} ordered."
                 )
             else:
-                line += " → OK"
+                line += " -> OK"
 
             results.append(line)
 
@@ -589,7 +589,7 @@ class InvoiceGuardEnvironment(Environment):
                 ) * 100
                 if abs(variance_pct) > tolerance:
                     line += (
-                        f" → DISCREPANCY: {variance_pct:+.1f}% variance "
+                        f" -> DISCREPANCY: {variance_pct:+.1f}% variance "
                         f"(exceeds {tolerance}% tolerance)"
                     )
                     has_discrepancy = True
@@ -605,7 +605,7 @@ class InvoiceGuardEnvironment(Environment):
                         f"requires escalation for supervisor review."
                     )
                 else:
-                    line += f" → Within tolerance ({variance_pct:+.1f}%)"
+                    line += f" -> Within tolerance ({variance_pct:+.1f}%)"
 
             results.append(line)
 
@@ -627,9 +627,9 @@ class InvoiceGuardEnvironment(Environment):
 
         lines = [
             f"  Invoice subtotal: ${inv.subtotal:,.2f} (line items sum: ${expected_subtotal:,.2f}) "
-            f"→ {'Consistent' if subtotal_ok else 'INCONSISTENT'}",
+            f"-> {'Consistent' if subtotal_ok else 'INCONSISTENT'}",
             f"  Invoice subtotal vs PO total: ${inv.subtotal:,.2f} vs ${po_total:,.2f} "
-            f"(diff: ${total_diff:+,.2f}) → "
+            f"(diff: ${total_diff:+,.2f}) -> "
             f"{'Within' if within_tolerance else 'EXCEEDS'} tolerance (${tolerance_amt:,.2f})",
             f"  Tax: ${inv.tax:,.2f} | Grand Total: ${inv.total_amount:,.2f}",
         ]
@@ -670,7 +670,7 @@ class InvoiceGuardEnvironment(Environment):
         )
         return detail, R_SUMMARIZE
 
-    # ── Helpers ──────────────────────────────────────────────────────────
+    # -- Helpers ----------------------------------------------------------
 
     def _reveal_doc(self, doc_name: str, detail: str) -> float:
         s = self._env_state
@@ -719,7 +719,7 @@ class InvoiceGuardEnvironment(Environment):
         )
 
 
-# Handler dispatch table — maps action type strings to bound methods.
+# Handler dispatch table -- maps action type strings to bound methods.
 # Built outside the class to keep the routing clean.
 _INVESTIGATION_HANDLERS = {
     ActionType.inspect_invoice_line_items.value: InvoiceGuardEnvironment._inspect_invoice_line_items,

@@ -1,5 +1,5 @@
 """
-InvoiceGuard — Baseline Inference Script.
+InvoiceGuard -- Baseline Inference Script.
 
 Runs a baseline LLM agent against all canonical tasks and reports per-task
 and overall grader scores. Uses the OpenAI API client as required by
@@ -11,11 +11,11 @@ STDOUT FORMAT (mandatory):
     [END]   success=<true|false> steps=<n> score=<score> rewards=<r1,r2,...,rn>
 
 Environment variables (mandatory):
-    API_BASE_URL       — LLM API endpoint (default: https://api.openai.com/v1)
-    MODEL_NAME         — model identifier (default: gpt-4o-mini)
-    HF_TOKEN           — Hugging Face token / primary API key
-    OPENAI_API_KEY     — Fallback API key for the LLM provider
-    LOCAL_IMAGE_NAME   — Docker image name (uses from_docker_image when set)
+    API_BASE_URL       -- LLM API endpoint (default: https://api.openai.com/v1)
+    MODEL_NAME         -- model identifier (default: gpt-4o-mini)
+    HF_TOKEN           -- Hugging Face token / primary API key
+    OPENAI_API_KEY     -- Fallback API key for the LLM provider
+    LOCAL_IMAGE_NAME   -- Docker image name (uses from_docker_image when set)
 """
 
 import asyncio
@@ -44,7 +44,7 @@ LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME", "")
 BENCHMARK = "invoice_guard"
 
 
-# ── Mandatory stdout logging ────────────────────────────────────────────
+# -- Mandatory stdout logging --------------------------------------------
 
 
 def log_start(task: str, env: str, model: str) -> None:
@@ -70,7 +70,7 @@ def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> No
     )
 
 
-# ── System prompt ────────────────────────────────────────────────────────
+# -- System prompt --------------------------------------------------------
 
 
 SYSTEM_PROMPT = """You are a senior accounts payable analyst. You will be given an invoice case to investigate and resolve.
@@ -89,7 +89,7 @@ RESPONSE FORMAT:
 - Resolution example: {"action_type": "submit_final_resolution", "final_decision": "approve_for_payment", "exception_type": "clean_match", "evidence_references": ["inspect_purchase_order", "compare_quantity"], "explanation": "All documents match within tolerance."}
 
 RULES:
-- Pay close attention to POLICY findings — they tell you when escalation is required.
+- Pay close attention to POLICY findings -- they tell you when escalation is required.
 - When multiple issues exist, escalation takes priority over hold.
 - Check PO references carefully before concluding an invoice is a duplicate.
 - Include all investigation actions you performed in evidence_references.
@@ -99,7 +99,7 @@ RULES:
 """
 
 
-# ── Prompt building ──────────────────────────────────────────────────────
+# -- Prompt building ------------------------------------------------------
 
 
 def build_observation_prompt(obs, is_first: bool = False) -> str:
@@ -135,7 +135,7 @@ def build_observation_prompt(obs, is_first: bool = False) -> str:
     return "\n".join(parts)
 
 
-# ── LLM response parsing ────────────────────────────────────────────────
+# -- LLM response parsing ------------------------------------------------
 
 
 def parse_llm_response(response_text: str) -> dict:
@@ -195,7 +195,7 @@ def build_action(params: dict) -> InvoiceGuardAction:
     return InvoiceGuardAction(**kwargs)
 
 
-# ── Observation extraction helpers ───────────────────────────────────────
+# -- Observation extraction helpers ---------------------------------------
 
 
 def _obs_from_step_result(result):
@@ -206,7 +206,7 @@ def _obs_from_step_result(result):
     return obs
 
 
-# ── Episode runner (local, synchronous) ──────────────────────────────────
+# -- Episode runner (local, synchronous) ----------------------------------
 
 
 def run_episode_local(env, client: OpenAI, task_id: TaskID) -> dict:
@@ -293,7 +293,7 @@ def run_episode_local(env, client: OpenAI, task_id: TaskID) -> dict:
     }
 
 
-# ── Episode runner (Docker, asynchronous) ────────────────────────────────
+# -- Episode runner (Docker, asynchronous) --------------------------------
 
 
 async def run_episode_docker(env, client: OpenAI, task_id: TaskID) -> dict:
@@ -382,12 +382,12 @@ async def run_episode_docker(env, client: OpenAI, task_id: TaskID) -> dict:
     }
 
 
-# ── Main ─────────────────────────────────────────────────────────────────
+# -- Main -----------------------------------------------------------------
 
 
 def _print_header():
     print("=" * 60, flush=True)
-    print("InvoiceGuard — Baseline Inference", flush=True)
+    print("InvoiceGuard -- Baseline Inference", flush=True)
     print("=" * 60, flush=True)
     print(f"API Base URL: {API_BASE_URL}", flush=True)
     print(f"Model:        {MODEL_NAME}", flush=True)

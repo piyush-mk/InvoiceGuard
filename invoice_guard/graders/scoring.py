@@ -1,7 +1,7 @@
 """
 Deterministic grading logic for InvoiceGuard episodes.
 
-Scores 0.0–1.0 with partial credit across five rubric dimensions:
+Scores 0.0-1.0 with partial credit across five rubric dimensions:
   - Final decision correctness  (0.40)
   - Exception type correctness  (0.20)
   - Evidence sufficiency         (0.20)
@@ -37,7 +37,7 @@ def grade_episode(case: CaseData, env_state: InvoiceGuardState) -> GraderResult:
     gt = case.ground_truth
     breakdown = {}
 
-    # ── 1. Decision correctness (0.40) ──────────────────────────────────
+    # -- 1. Decision correctness (0.40) ----------------------------------
     decision_score = 0.0
     if env_state.final_decision:
         agent_decision = env_state.final_decision
@@ -55,7 +55,7 @@ def grade_episode(case: CaseData, env_state: InvoiceGuardState) -> GraderResult:
         "score": decision_score,
     }
 
-    # ── 2. Exception type correctness (0.20) ────────────────────────────
+    # -- 2. Exception type correctness (0.20) ----------------------------
     exception_score = 0.0
     if env_state.final_exception_type:
         if env_state.final_exception_type == gt.correct_exception_type.value:
@@ -72,7 +72,7 @@ def grade_episode(case: CaseData, env_state: InvoiceGuardState) -> GraderResult:
         "score": exception_score,
     }
 
-    # ── 3. Evidence sufficiency (0.20) ──────────────────────────────────
+    # -- 3. Evidence sufficiency (0.20) ----------------------------------
     evidence_score = _score_evidence(
         agent_evidence=env_state.final_evidence,
         actions_taken=env_state.actions_taken,
@@ -85,7 +85,7 @@ def grade_episode(case: CaseData, env_state: InvoiceGuardState) -> GraderResult:
         "score": evidence_score,
     }
 
-    # ── 4. Investigation quality (0.10) ─────────────────────────────────
+    # -- 4. Investigation quality (0.10) ---------------------------------
     investigation_score = _score_investigation(
         actions_taken=env_state.actions_taken,
         documents_revealed=env_state.documents_revealed,
@@ -96,7 +96,7 @@ def grade_episode(case: CaseData, env_state: InvoiceGuardState) -> GraderResult:
         "score": investigation_score,
     }
 
-    # ── 5. Efficiency (0.10) ────────────────────────────────────────────
+    # -- 5. Efficiency (0.10) --------------------------------------------
     efficiency_score = _score_efficiency(
         steps_used=env_state.step_count,
         max_steps=case.max_steps,
@@ -109,7 +109,7 @@ def grade_episode(case: CaseData, env_state: InvoiceGuardState) -> GraderResult:
         "score": efficiency_score,
     }
 
-    # ── Weighted total ──────────────────────────────────────────────────
+    # -- Weighted total --------------------------------------------------
     total = (
         W_DECISION * decision_score
         + W_EXCEPTION * exception_score

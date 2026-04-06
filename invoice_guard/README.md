@@ -1,6 +1,6 @@
 ---
 title: Invoice Guard Environment Server
-emoji: 🛡️
+emoji: 
 colorFrom: purple
 colorTo: yellow
 sdk: docker
@@ -11,9 +11,9 @@ tags:
   - openenv
 ---
 
-# InvoiceGuard — Three-Way Invoice Matching Environment
+# InvoiceGuard -- Three-Way Invoice Matching Environment
 
-An OpenEnv environment that simulates accounts payable exception resolution. An AI agent investigates multi-document business cases — invoices, purchase orders, goods receipt notes, vendor profiles, and company policies — to detect discrepancies, classify exception types, and render correct decisions.
+An OpenEnv environment that simulates accounts payable exception resolution. An AI agent investigates multi-document business cases -- invoices, purchase orders, goods receipt notes, vendor profiles, and company policies -- to detect discrepancies, classify exception types, and render correct decisions.
 
 ## Motivation
 
@@ -216,22 +216,22 @@ Average: **~0.93**
 
 ```
 invoice_guard/
-├── openenv.yaml              # OpenEnv manifest
-├── pyproject.toml             # Dependencies (managed by uv)
-├── uv.lock                   # Locked dependencies
-├── models.py                 # All data models (Action, Observation, State, entities)
-├── client.py                 # InvoiceGuardEnv client (EnvClient subclass)
-├── inference.py              # Baseline LLM agent script
-├── .env.example              # Environment variable template
-├── tasks/
-│   ├── __init__.py
-│   └── definitions.py        # Synthetic case templates and ground truth
-├── graders/
-│   ├── __init__.py
-│   └── scoring.py            # Deterministic multi-criteria grader
-└── server/
-    ├── __init__.py
-    ├── app.py                 # FastAPI application (HTTP + WebSocket)
-    ├── invoice_guard_environment.py  # Core Environment implementation
-    └── Dockerfile             # Container image definition
+|---- openenv.yaml              # OpenEnv manifest
+|---- pyproject.toml             # Dependencies (managed by uv)
+|---- uv.lock                   # Locked dependencies
+|---- models.py                 # All data models (Action, Observation, State, entities)
+|---- client.py                 # InvoiceGuardEnv client (EnvClient subclass)
+|---- inference.py              # Baseline LLM agent script
+|---- .env.example              # Environment variable template
+|---- tasks/
+|   |---- __init__.py
+|   |---- definitions.py        # Synthetic case templates and ground truth
+|---- graders/
+|   |---- __init__.py
+|   |---- scoring.py            # Deterministic multi-criteria grader
+|---- server/
+    |---- __init__.py
+    |---- app.py                 # FastAPI application (HTTP + WebSocket)
+    |---- invoice_guard_environment.py  # Core Environment implementation
+    |---- Dockerfile             # Container image definition
 ```
