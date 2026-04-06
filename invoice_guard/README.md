@@ -27,8 +27,10 @@ Three-way invoice matching is one of the most common and error-prone tasks in en
 | `task_2_partial_receipt` | Billed quantity exceeds received quantity | Moderate | `place_on_hold` | `partial_receipt` |
 | `task_3_price_variance` | Unit price exceeds PO price beyond tolerance | Moderate | `escalate_for_supervisor_review` | `price_mismatch` |
 | `task_4_duplicate_invoice` | Previously processed invoice resubmitted | Hard | `reject_invoice` | `duplicate_invoice` |
+| `task_5_mixed_discrepancy` | Invoice with both price variance and partial receipt; conflicting signals | Hard | `escalate_for_supervisor_review` | `price_mismatch` |
+| `task_6_false_positive_duplicate` | Invoice looks like a duplicate but is a legitimate recurring order for a different PO | Hard | `approve_for_payment` | `clean_match` |
 
-Each task includes fully synthetic business documents with deterministic ground truth and a multi-criteria grader.
+Each task includes fully synthetic business documents with deterministic ground truth and a multi-criteria grader. Tasks 5 and 6 are designed to challenge frontier models with ambiguity and conflicting evidence.
 
 ## Action Space
 
@@ -179,7 +181,7 @@ uv run python inference.py
 cd invoice_guard
 
 # Build
-docker build -t invoiceguard -f server/Dockerfile .
+docker build -t invoiceguard .
 
 # Run
 docker run -p 8000:8000 invoiceguard
@@ -209,8 +211,12 @@ Results from baseline inference with `gpt-4o-mini`:
 | `task_2_partial_receipt` | 0.94+ | `place_on_hold` | 5-7 |
 | `task_3_price_variance` | 0.90+ | `escalate_for_supervisor_review` | 6-8 |
 | `task_4_duplicate_invoice` | 0.94+ | `reject_invoice` | 5-7 |
+| `task_5_mixed_discrepancy` | 0.70+ | `escalate_for_supervisor_review` | 6-8 |
+| `task_6_false_positive_duplicate` | 0.35 | varies | 6-8 |
 
-Average: **~0.93**
+Average across 6 canonical tasks: **~0.76**
+
+Tasks 5 and 6 are intentionally harder: task 5 presents conflicting signals (partial receipt + price variance) requiring policy-aware prioritization; task 6 uses a false-positive duplicate trap where many agents incorrectly reject a legitimate invoice.
 
 ## Project Structure
 
@@ -219,6 +225,7 @@ invoice_guard/
 |---- openenv.yaml              # OpenEnv manifest
 |---- pyproject.toml             # Dependencies (managed by uv)
 |---- uv.lock                   # Locked dependencies
+|---- Dockerfile                # Container image definition
 |---- models.py                 # All data models (Action, Observation, State, entities)
 |---- client.py                 # InvoiceGuardEnv client (EnvClient subclass)
 |---- inference.py              # Baseline LLM agent script
@@ -233,5 +240,4 @@ invoice_guard/
     |---- __init__.py
     |---- app.py                 # FastAPI application (HTTP + WebSocket)
     |---- invoice_guard_environment.py  # Core Environment implementation
-    |---- Dockerfile             # Container image definition
 ```
