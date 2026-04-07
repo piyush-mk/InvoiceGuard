@@ -68,6 +68,12 @@ class TestReset:
             "task_4_duplicate_invoice",
             "task_5_mixed_discrepancy",
             "task_6_false_positive_duplicate",
+            "task_7_retroactive_price",
+            "task_8_split_invoice_pattern",
+            "task_9_clean_from_risky_vendor",
+            "task_10_rounding_false_alarm",
+            "task_11_authorized_overship",
+            "task_12_corrected_resubmission",
         ]
         for tid in canonical:
             obs = env.reset(task_id=tid)

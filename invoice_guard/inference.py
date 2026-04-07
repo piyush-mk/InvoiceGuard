@@ -28,6 +28,17 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 
+_MODELS_USING_MAX_COMPLETION_TOKENS = {"gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano",
+                                        "gpt-5", "gpt-5-mini", "gpt-5.1"}
+
+
+def _token_limit_kwarg(model_name: str, limit: int = 512) -> dict:
+    """Return the correct token-limit parameter for the model."""
+    for prefix in _MODELS_USING_MAX_COMPLETION_TOKENS:
+        if model_name.startswith(prefix):
+            return {"max_completion_tokens": limit}
+    return {"max_tokens": limit}
+
 from models import (
     ActionType, DecisionType, ExceptionType, InvoiceGuardAction, TaskID,
 )
@@ -240,7 +251,7 @@ def run_episode_local(env, client: OpenAI, task_id: TaskID) -> dict:
                     "model": MODEL_NAME,
                     "messages": messages,
                     "temperature": 0.0,
-                    "max_tokens": 512,
+                    **_token_limit_kwarg(MODEL_NAME),
                 }
                 try:
                     api_kwargs["response_format"] = {"type": "json_object"}
@@ -328,7 +339,7 @@ async def run_episode_docker(env, client: OpenAI, task_id: TaskID) -> dict:
                     "model": MODEL_NAME,
                     "messages": messages,
                     "temperature": 0.0,
-                    "max_tokens": 512,
+                    **_token_limit_kwarg(MODEL_NAME),
                 }
                 try:
                     api_kwargs["response_format"] = {"type": "json_object"}

@@ -50,9 +50,9 @@ class TestEnums:
         assert "partial_receipt" in values
         assert "mixed_discrepancy" in values
 
-    def test_task_ids_minimum_6_canonical(self):
+    def test_task_ids_minimum_12_canonical(self):
         canonical = [t for t in TaskID if not any(c in t.value for c in ["b_", "c_"])]
-        assert len(canonical) >= 6
+        assert len(canonical) >= 12
 
     def test_difficulty_levels(self):
         assert set(d.value for d in Difficulty) == {"easy", "moderate", "hard"}

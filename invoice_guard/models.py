@@ -76,6 +76,10 @@ class TaskID(str, Enum):
     task_6_false_positive_duplicate = "task_6_false_positive_duplicate"
     task_7_retroactive_price = "task_7_retroactive_price"
     task_8_split_invoice_pattern = "task_8_split_invoice_pattern"
+    task_9_clean_from_risky_vendor = "task_9_clean_from_risky_vendor"
+    task_10_rounding_false_alarm = "task_10_rounding_false_alarm"
+    task_11_authorized_overship = "task_11_authorized_overship"
+    task_12_corrected_resubmission = "task_12_corrected_resubmission"
 
 
 class Difficulty(str, Enum):

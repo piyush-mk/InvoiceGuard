@@ -32,6 +32,10 @@ TASK_LIST: List[TaskID] = [
     TaskID.task_6_false_positive_duplicate,
     TaskID.task_7_retroactive_price,
     TaskID.task_8_split_invoice_pattern,
+    TaskID.task_9_clean_from_risky_vendor,
+    TaskID.task_10_rounding_false_alarm,
+    TaskID.task_11_authorized_overship,
+    TaskID.task_12_corrected_resubmission,
 ]
 
 ALL_TASKS: List[TaskID] = [
@@ -51,6 +55,10 @@ ALL_TASKS: List[TaskID] = [
     TaskID.task_6_false_positive_duplicate,
     TaskID.task_7_retroactive_price,
     TaskID.task_8_split_invoice_pattern,
+    TaskID.task_9_clean_from_risky_vendor,
+    TaskID.task_10_rounding_false_alarm,
+    TaskID.task_11_authorized_overship,
+    TaskID.task_12_corrected_resubmission,
 ]
 
 
@@ -73,6 +81,10 @@ def get_task_case(task_id: TaskID) -> CaseData:
         TaskID.task_6_false_positive_duplicate: _build_task_6,
         TaskID.task_7_retroactive_price: _build_task_7,
         TaskID.task_8_split_invoice_pattern: _build_task_8,
+        TaskID.task_9_clean_from_risky_vendor: _build_task_9,
+        TaskID.task_10_rounding_false_alarm: _build_task_10,
+        TaskID.task_11_authorized_overship: _build_task_11,
+        TaskID.task_12_corrected_resubmission: _build_task_12,
     }
     return builders[task_id]()
 
@@ -1599,6 +1611,490 @@ def _build_task_8() -> CaseData:
                 "Case history explicitly flags split-invoice pattern concern",
                 "Combined value exceeds mandatory escalation threshold of $100,000",
                 "Individual prices and quantities match PO -- no line-level discrepancy",
+            ],
+        ),
+    )
+
+
+# -- Task 9: Clean Invoice from High-Risk Vendor ----------------------------
+# Difficulty: hard | Decision: approve_for_payment | Exception: clean_match
+# Every document matches perfectly. But the vendor is HIGH RISK with 5 prior
+# incidents and is non-preferred. The trap: agents escalate or reject based
+# on vendor risk alone. Per policy, risk tier affects escalation thresholds
+# for discrepancies, not clean invoices. No discrepancy = approve.
+
+
+def _build_task_9() -> CaseData:
+    return CaseData(
+        case_id="CASE-9001",
+        task_id=TaskID.task_9_clean_from_risky_vendor,
+        difficulty=Difficulty.hard,
+        max_steps=12,
+        invoice=Invoice(
+            invoice_number="INV-2024-3300",
+            supplier_name="Delta Industrial Components",
+            supplier_id="SUP-9300",
+            invoice_date="2024-12-10",
+            po_reference="PO-9200",
+            line_items=[
+                InvoiceLineItem(
+                    item_code="ITEM-DC01",
+                    description="Steel Flanged Coupling 6-inch",
+                    quantity_billed=50,
+                    unit_price_billed=85.00,
+                    line_total_billed=4250.00,
+                ),
+                InvoiceLineItem(
+                    item_code="ITEM-DC02",
+                    description="Gasket Kit Industrial Grade",
+                    quantity_billed=200,
+                    unit_price_billed=12.50,
+                    line_total_billed=2500.00,
+                ),
+            ],
+            subtotal=6750.00,
+            tax=540.00,
+            total_amount=7290.00,
+        ),
+        purchase_order=PurchaseOrder(
+            po_number="PO-9200",
+            supplier_id="SUP-9300",
+            order_date="2024-11-25",
+            line_items=[
+                POLineItem(
+                    item_code="ITEM-DC01",
+                    description="Steel Flanged Coupling 6-inch",
+                    ordered_quantity=50,
+                    unit_price_ordered=85.00,
+                    line_total_ordered=4250.00,
+                ),
+                POLineItem(
+                    item_code="ITEM-DC02",
+                    description="Gasket Kit Industrial Grade",
+                    ordered_quantity=200,
+                    unit_price_ordered=12.50,
+                    line_total_ordered=2500.00,
+                ),
+            ],
+        ),
+        goods_receipt_note=GoodsReceiptNote(
+            grn_number="GRN-16000",
+            po_reference="PO-9200",
+            receipt_date="2024-12-05",
+            line_items=[
+                GRNLineItem(
+                    item_code="ITEM-DC01",
+                    quantity_received=50,
+                    accepted_quantity=50,
+                ),
+                GRNLineItem(
+                    item_code="ITEM-DC02",
+                    quantity_received=200,
+                    accepted_quantity=200,
+                ),
+            ],
+            warehouse_note="Full order received. Quality inspection passed.",
+        ),
+        vendor_profile=VendorProfile(
+            supplier_id="SUP-9300",
+            supplier_name="Delta Industrial Components",
+            risk_tier="high",
+            duplicate_risk_count=5,
+            preferred_vendor=False,
+            escalation_threshold=5000.00,
+        ),
+        company_policy=CompanyPolicy(
+            quantity_tolerance_pct=5.0,
+            price_tolerance_pct=5.0,
+            total_tolerance_amt=200.0,
+            duplicate_check_enabled=True,
+        ),
+        case_history=CaseHistory(
+            prior_comments=[
+                "Vendor under enhanced monitoring due to past billing errors.",
+                "Last 3 invoices from this vendor were all clean and processed normally.",
+                "Risk tier remains 'high' pending annual vendor review in Q1 2025.",
+            ],
+        ),
+        ground_truth=GroundTruth(
+            correct_decision=DecisionType.approve_for_payment,
+            correct_exception_type=ExceptionType.clean_match,
+            acceptable_evidence=[
+                "inspect_purchase_order",
+                "inspect_goods_receipt_note",
+                "compare_quantity",
+                "compare_price",
+                "inspect_vendor_profile",
+                "inspect_policy_rules",
+            ],
+            key_findings=[
+                "All quantities match exactly: 50 couplings and 200 gasket kits",
+                "All prices match PO exactly: $85.00 and $12.50",
+                "Vendor is high-risk but no actual discrepancy exists",
+                "Risk tier affects escalation thresholds, not clean invoices",
+                "Last 3 invoices from this vendor were processed normally",
+                "No policy rule mandates rejection of clean invoices from high-risk vendors",
+            ],
+        ),
+    )
+
+
+# -- Task 10: Rounding Error False Alarm ------------------------------------
+# Difficulty: hard | Decision: approve_for_payment | Exception: clean_match
+# Invoice total is $0.01 off from calculated sum of line items due to
+# per-line rounding. All line items match PO exactly. The trivial rounding
+# difference is well within any tolerance. Trap: compare_totals reports a
+# "mismatch" finding and agents escalate over one cent.
+
+
+def _build_task_10() -> CaseData:
+    return CaseData(
+        case_id="CASE-10001",
+        task_id=TaskID.task_10_rounding_false_alarm,
+        difficulty=Difficulty.hard,
+        max_steps=12,
+        invoice=Invoice(
+            invoice_number="INV-2024-4410",
+            supplier_name="Kensington Paper & Print",
+            supplier_id="SUP-10400",
+            invoice_date="2024-12-15",
+            po_reference="PO-10100",
+            line_items=[
+                InvoiceLineItem(
+                    item_code="ITEM-KP01",
+                    description="A4 Premium Copy Paper (case of 10 reams)",
+                    quantity_billed=33,
+                    unit_price_billed=42.99,
+                    line_total_billed=1418.67,
+                ),
+                InvoiceLineItem(
+                    item_code="ITEM-KP02",
+                    description="Color Laser Toner Cartridge Black",
+                    quantity_billed=7,
+                    unit_price_billed=189.99,
+                    line_total_billed=1329.93,
+                ),
+                InvoiceLineItem(
+                    item_code="ITEM-KP03",
+                    description="Binding Covers Glossy A4 (pack of 100)",
+                    quantity_billed=15,
+                    unit_price_billed=28.33,
+                    line_total_billed=424.95,
+                ),
+            ],
+            subtotal=3173.55,
+            tax=253.88,
+            total_amount=3427.43,
+        ),
+        purchase_order=PurchaseOrder(
+            po_number="PO-10100",
+            supplier_id="SUP-10400",
+            order_date="2024-12-01",
+            line_items=[
+                POLineItem(
+                    item_code="ITEM-KP01",
+                    description="A4 Premium Copy Paper (case of 10 reams)",
+                    ordered_quantity=33,
+                    unit_price_ordered=42.99,
+                    line_total_ordered=1418.67,
+                ),
+                POLineItem(
+                    item_code="ITEM-KP02",
+                    description="Color Laser Toner Cartridge Black",
+                    ordered_quantity=7,
+                    unit_price_ordered=189.99,
+                    line_total_ordered=1329.93,
+                ),
+                POLineItem(
+                    item_code="ITEM-KP03",
+                    description="Binding Covers Glossy A4 (pack of 100)",
+                    ordered_quantity=15,
+                    unit_price_ordered=28.33,
+                    line_total_ordered=424.95,
+                ),
+            ],
+        ),
+        goods_receipt_note=GoodsReceiptNote(
+            grn_number="GRN-17500",
+            po_reference="PO-10100",
+            receipt_date="2024-12-10",
+            line_items=[
+                GRNLineItem(
+                    item_code="ITEM-KP01",
+                    quantity_received=33,
+                    accepted_quantity=33,
+                ),
+                GRNLineItem(
+                    item_code="ITEM-KP02",
+                    quantity_received=7,
+                    accepted_quantity=7,
+                ),
+                GRNLineItem(
+                    item_code="ITEM-KP03",
+                    quantity_received=15,
+                    accepted_quantity=15,
+                ),
+            ],
+        ),
+        vendor_profile=VendorProfile(
+            supplier_id="SUP-10400",
+            supplier_name="Kensington Paper & Print",
+            risk_tier="low",
+            preferred_vendor=True,
+        ),
+        company_policy=CompanyPolicy(
+            quantity_tolerance_pct=5.0,
+            price_tolerance_pct=5.0,
+            total_tolerance_amt=100.0,
+            duplicate_check_enabled=True,
+        ),
+        case_history=CaseHistory(),
+        ground_truth=GroundTruth(
+            correct_decision=DecisionType.approve_for_payment,
+            correct_exception_type=ExceptionType.clean_match,
+            acceptable_evidence=[
+                "inspect_purchase_order",
+                "inspect_goods_receipt_note",
+                "compare_quantity",
+                "compare_price",
+                "compare_totals",
+                "inspect_policy_rules",
+            ],
+            key_findings=[
+                "All quantities match exactly",
+                "All unit prices match PO exactly",
+                "Subtotal rounding difference of $0.01 is within tolerance",
+                "Total tolerance is $100.00 -- a $0.01 difference is negligible",
+                "Rounding is a normal artifact of multi-line calculation",
+                "Preferred vendor with low risk tier",
+            ],
+        ),
+    )
+
+
+# -- Task 11: Authorized Overship -------------------------------------------
+# Difficulty: hard | Decision: approve_for_payment | Exception: clean_match
+# GRN shows 110 units received vs 100 ordered. Invoice bills for 110.
+# Case history contains explicit authorization for up to 10% overship.
+# Trap: agents see quantity mismatch and hold. But the overship was
+# pre-authorized, making this a clean match per the authorization.
+
+
+def _build_task_11() -> CaseData:
+    return CaseData(
+        case_id="CASE-11001",
+        task_id=TaskID.task_11_authorized_overship,
+        difficulty=Difficulty.hard,
+        max_steps=12,
+        invoice=Invoice(
+            invoice_number="INV-2024-5520",
+            supplier_name="Pacific Coast Fasteners",
+            supplier_id="SUP-11500",
+            invoice_date="2024-12-18",
+            po_reference="PO-11300",
+            line_items=[
+                InvoiceLineItem(
+                    item_code="ITEM-PF01",
+                    description="M8 Hex Bolt Grade 8.8 Zinc Plated (box of 100)",
+                    quantity_billed=110,
+                    unit_price_billed=24.50,
+                    line_total_billed=2695.00,
+                ),
+            ],
+            subtotal=2695.00,
+            tax=215.60,
+            total_amount=2910.60,
+            note="Quantity includes authorized 10% overship per PO amendment.",
+        ),
+        purchase_order=PurchaseOrder(
+            po_number="PO-11300",
+            supplier_id="SUP-11500",
+            order_date="2024-12-01",
+            line_items=[
+                POLineItem(
+                    item_code="ITEM-PF01",
+                    description="M8 Hex Bolt Grade 8.8 Zinc Plated (box of 100)",
+                    ordered_quantity=100,
+                    unit_price_ordered=24.50,
+                    line_total_ordered=2450.00,
+                ),
+            ],
+            payment_terms="Net 30",
+        ),
+        goods_receipt_note=GoodsReceiptNote(
+            grn_number="GRN-18800",
+            po_reference="PO-11300",
+            receipt_date="2024-12-12",
+            line_items=[
+                GRNLineItem(
+                    item_code="ITEM-PF01",
+                    quantity_received=110,
+                    accepted_quantity=110,
+                ),
+            ],
+            warehouse_note="110 boxes received. Overship authorized per buyer memo dated 2024-12-02.",
+        ),
+        vendor_profile=VendorProfile(
+            supplier_id="SUP-11500",
+            supplier_name="Pacific Coast Fasteners",
+            risk_tier="low",
+            preferred_vendor=True,
+        ),
+        company_policy=CompanyPolicy(
+            quantity_tolerance_pct=5.0,
+            price_tolerance_pct=5.0,
+            total_tolerance_amt=500.0,
+            duplicate_check_enabled=True,
+        ),
+        case_history=CaseHistory(
+            prior_comments=[
+                "PO-11300 Amendment 1 (2024-12-02): Authorized up to 10% overship "
+                "at the same unit price to ensure inventory buffer for Q1.",
+                "Buyer confirmed acceptance of up to 110 boxes at $24.50/box.",
+                "Warehouse confirmed receipt of full 110 boxes in good condition.",
+            ],
+        ),
+        ground_truth=GroundTruth(
+            correct_decision=DecisionType.approve_for_payment,
+            correct_exception_type=ExceptionType.clean_match,
+            acceptable_evidence=[
+                "inspect_purchase_order",
+                "inspect_goods_receipt_note",
+                "compare_quantity",
+                "inspect_policy_rules",
+            ],
+            key_findings=[
+                "Billed 110 vs ordered 100 -- 10% overship",
+                "PO Amendment 1 explicitly authorized up to 10% overship",
+                "Buyer confirmed acceptance of 110 units at $24.50",
+                "GRN confirms all 110 accepted in good condition",
+                "Unit price matches PO exactly",
+                "Overship is within the authorized range",
+            ],
+        ),
+    )
+
+
+# -- Task 12: Corrected Invoice Resubmission --------------------------------
+# Difficulty: hard | Decision: approve_for_payment | Exception: clean_match
+# Invoice number INV-2024-0500-R1 looks like a duplicate of INV-2024-0500.
+# Case history shows the original was rejected for a $500 overcharge, and
+# this is the corrected resubmission at the correct PO price. All documents
+# now match. Trap: duplicate check flags the similar invoice number, and
+# agents reject as duplicate without reading the correction context.
+
+
+def _build_task_12() -> CaseData:
+    return CaseData(
+        case_id="CASE-12001",
+        task_id=TaskID.task_12_corrected_resubmission,
+        difficulty=Difficulty.hard,
+        max_steps=12,
+        invoice=Invoice(
+            invoice_number="INV-2024-0500-R1",
+            supplier_name="Westfield Electronics",
+            supplier_id="SUP-12600",
+            invoice_date="2024-12-20",
+            po_reference="PO-12400",
+            line_items=[
+                InvoiceLineItem(
+                    item_code="ITEM-WE01",
+                    description="Industrial Ethernet Switch 24-Port PoE+",
+                    quantity_billed=5,
+                    unit_price_billed=1250.00,
+                    line_total_billed=6250.00,
+                ),
+                InvoiceLineItem(
+                    item_code="ITEM-WE02",
+                    description="SFP+ 10G Transceiver Module",
+                    quantity_billed=20,
+                    unit_price_billed=85.00,
+                    line_total_billed=1700.00,
+                ),
+            ],
+            subtotal=7950.00,
+            tax=636.00,
+            total_amount=8586.00,
+            note="Corrected invoice. Replaces INV-2024-0500 which was rejected for pricing error.",
+        ),
+        purchase_order=PurchaseOrder(
+            po_number="PO-12400",
+            supplier_id="SUP-12600",
+            order_date="2024-12-01",
+            line_items=[
+                POLineItem(
+                    item_code="ITEM-WE01",
+                    description="Industrial Ethernet Switch 24-Port PoE+",
+                    ordered_quantity=5,
+                    unit_price_ordered=1250.00,
+                    line_total_ordered=6250.00,
+                ),
+                POLineItem(
+                    item_code="ITEM-WE02",
+                    description="SFP+ 10G Transceiver Module",
+                    ordered_quantity=20,
+                    unit_price_ordered=85.00,
+                    line_total_ordered=1700.00,
+                ),
+            ],
+        ),
+        goods_receipt_note=GoodsReceiptNote(
+            grn_number="GRN-20100",
+            po_reference="PO-12400",
+            receipt_date="2024-12-10",
+            line_items=[
+                GRNLineItem(
+                    item_code="ITEM-WE01",
+                    quantity_received=5,
+                    accepted_quantity=5,
+                ),
+                GRNLineItem(
+                    item_code="ITEM-WE02",
+                    quantity_received=20,
+                    accepted_quantity=20,
+                ),
+            ],
+        ),
+        vendor_profile=VendorProfile(
+            supplier_id="SUP-12600",
+            supplier_name="Westfield Electronics",
+            risk_tier="medium",
+            duplicate_risk_count=1,
+            preferred_vendor=True,
+        ),
+        company_policy=CompanyPolicy(
+            quantity_tolerance_pct=5.0,
+            price_tolerance_pct=5.0,
+            total_tolerance_amt=200.0,
+            duplicate_check_enabled=True,
+        ),
+        case_history=CaseHistory(
+            prior_comments=[
+                "INV-2024-0500 was rejected on 2024-12-15: switches billed at $1,350 "
+                "instead of PO price $1,250. Vendor acknowledged error.",
+                "Vendor issued corrected invoice INV-2024-0500-R1 with correct pricing.",
+                "AP team confirmed: process INV-2024-0500-R1 as the replacement invoice.",
+            ],
+            processed_invoice_numbers=[],
+            similar_invoice_refs=["INV-2024-0500"],
+        ),
+        ground_truth=GroundTruth(
+            correct_decision=DecisionType.approve_for_payment,
+            correct_exception_type=ExceptionType.clean_match,
+            acceptable_evidence=[
+                "inspect_purchase_order",
+                "inspect_goods_receipt_note",
+                "compare_price",
+                "check_for_duplicate_invoice",
+                "inspect_policy_rules",
+            ],
+            key_findings=[
+                "INV-2024-0500-R1 is the corrected version of rejected INV-2024-0500",
+                "Original invoice was rejected for $100/unit price overcharge on switches",
+                "Corrected invoice has the correct PO price of $1,250 per switch",
+                "All quantities and prices now match PO exactly",
+                "AP team explicitly approved processing the replacement invoice",
+                "Not a duplicate -- it is a correction of a rejected invoice",
             ],
         ),
     )
