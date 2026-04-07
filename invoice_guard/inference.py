@@ -12,9 +12,8 @@ STDOUT FORMAT (mandatory):
 
 Environment variables (mandatory):
     API_BASE_URL       -- LLM API endpoint (default: https://api.openai.com/v1)
-    MODEL_NAME         -- model identifier (default: gpt-4o-mini)
-    HF_TOKEN           -- Hugging Face token / primary API key
-    OPENAI_API_KEY     -- Fallback API key for the LLM provider
+    MODEL_NAME         -- model identifier (default: gpt-4.1-mini)
+    HF_TOKEN           -- Your Hugging Face / API key
     LOCAL_IMAGE_NAME   -- Docker image name (uses from_docker_image when set)
 """
 
@@ -47,9 +46,8 @@ from tasks import get_task_case, TASK_LIST
 load_dotenv()
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
-HF_TOKEN = os.getenv("HF_TOKEN")
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY") or ""
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4.1-mini")
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY") or ""
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 
 BENCHMARK = "invoice_guard"
