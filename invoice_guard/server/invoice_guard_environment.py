@@ -120,6 +120,12 @@ class InvoiceGuardEnvironment(Environment):
         if inv.note:
             summary += f"\nInvoice note: {inv.note}"
 
+        initial_suggestions = [
+            "inspect_purchase_order",
+            "inspect_goods_receipt_note",
+            "inspect_invoice_line_items",
+        ]
+
         return InvoiceGuardObservation(
             case_id=c.case_id,
             task_id=c.task_id.value,
@@ -127,6 +133,7 @@ class InvoiceGuardEnvironment(Environment):
             invoice_summary=summary,
             goal=GOAL_TEXT,
             available_actions=ALL_ACTIONS,
+            suggested_next_actions=initial_suggestions,
             revealed_documents=[],
             findings=[],
             remaining_steps=c.max_steps,
@@ -196,6 +203,7 @@ class InvoiceGuardEnvironment(Environment):
             invoice_summary=self._invoice_summary(),
             goal=GOAL_TEXT,
             available_actions=ALL_ACTIONS,
+            suggested_next_actions=self._suggest_next_actions(remaining),
             revealed_documents=list(s.documents_revealed),
             findings=list(s.findings_collected),
             remaining_steps=remaining,
@@ -261,9 +269,19 @@ class InvoiceGuardEnvironment(Environment):
         )
         s.final_evidence = list(action.evidence_references)
         s.final_explanation = action.explanation
+        s.final_confidence = action.confidence
 
         grader_result = grade_episode(c, s)
-        s.cumulative_reward += grader_result.score
+
+        confidence_bonus = 0.0
+        if action.confidence is not None:
+            is_correct = (s.final_decision == c.ground_truth.correct_decision.value)
+            if is_correct and action.confidence >= 0.8:
+                confidence_bonus = 0.05
+            elif not is_correct and action.confidence >= 0.8:
+                confidence_bonus = -0.05
+
+        s.cumulative_reward += grader_result.score + confidence_bonus
 
         return InvoiceGuardObservation(
             case_id=c.case_id,
@@ -694,6 +712,50 @@ class InvoiceGuardEnvironment(Environment):
             f"Invoice: {inv.invoice_number}, Date: {inv.invoice_date}, "
             f"PO Ref: {inv.po_reference}, Total: ${inv.total_amount:,.2f}"
         )
+
+    def _suggest_next_actions(self, remaining: int) -> list:
+        """Suggest the most useful next actions based on investigation progress."""
+        s = self._env_state
+        taken = set(s.actions_taken)
+        suggestions = []
+
+        if remaining <= 2:
+            suggestions.append("submit_final_resolution")
+            return suggestions
+
+        core_docs = [
+            "inspect_purchase_order",
+            "inspect_goods_receipt_note",
+            "inspect_invoice_line_items",
+        ]
+        for a in core_docs:
+            if a not in taken:
+                suggestions.append(a)
+
+        comparisons = ["compare_quantity", "compare_price", "compare_totals"]
+        docs_seen = set(s.documents_revealed)
+        has_po = "purchase_order" in docs_seen
+        has_grn = "goods_receipt_note" in docs_seen
+        if has_po and has_grn:
+            for a in comparisons:
+                if a not in taken:
+                    suggestions.append(a)
+
+        secondary = [
+            "inspect_policy_rules",
+            "check_for_duplicate_invoice",
+            "inspect_vendor_profile",
+        ]
+        for a in secondary:
+            if a not in taken:
+                suggestions.append(a)
+
+        if not suggestions:
+            if "summarize_findings" not in taken:
+                suggestions.append("summarize_findings")
+            suggestions.append("submit_final_resolution")
+
+        return suggestions
 
     def _build_warnings(self, remaining: int) -> list:
         warnings = []

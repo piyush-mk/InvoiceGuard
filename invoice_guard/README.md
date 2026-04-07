@@ -29,8 +29,14 @@ Three-way invoice matching is one of the most common and error-prone tasks in en
 | `task_4_duplicate_invoice` | Previously processed invoice resubmitted | Hard | `reject_invoice` | `duplicate_invoice` |
 | `task_5_mixed_discrepancy` | Invoice with both price variance and partial receipt; conflicting signals | Hard | `escalate_for_supervisor_review` | `price_mismatch` |
 | `task_6_false_positive_duplicate` | Invoice looks like a duplicate but is a legitimate recurring order for a different PO | Hard | `approve_for_payment` | `clean_match` |
+| `task_7_retroactive_price` | Vendor applied a price increase retroactively; PO predates the effective date | Hard | `escalate_for_supervisor_review` | `price_mismatch` |
+| `task_8_split_invoice_pattern` | Supplier splits large order into sub-threshold invoices to dodge auto-approval | Hard | `escalate_for_supervisor_review` | `policy_violation` |
+| `task_9_clean_from_risky_vendor` | Clean invoice from high-risk vendor with 5 prior incidents -- false-positive trap | Hard | `approve_for_payment` | `clean_match` |
+| `task_10_rounding_false_alarm` | Invoice total off by $0.01 due to line-item rounding -- all else matches perfectly | Hard | `approve_for_payment` | `clean_match` |
+| `task_11_authorized_overship` | GRN shows 110 received vs 100 ordered, but PO amendment authorized 10% overship | Hard | `approve_for_payment` | `clean_match` |
+| `task_12_corrected_resubmission` | Corrected invoice (INV-R1) looks like a duplicate of rejected original | Hard | `approve_for_payment` | `clean_match` |
 
-Each task includes fully synthetic business documents with deterministic ground truth and a multi-criteria grader. Tasks 5 and 6 are designed to challenge frontier models with ambiguity and conflicting evidence.
+Each task includes fully synthetic business documents with deterministic ground truth and a multi-criteria grader. Tasks 5-8 test ambiguity, temporal reasoning, and cross-case pattern detection. Tasks 9-12 are false-positive traps where surface signals mislead toward rejection but deeper investigation reveals the correct answer is approval.
 
 ## Action Space
 
@@ -120,14 +126,15 @@ The environment provides dense, per-step rewards:
 
 ## Grading
 
-Episodes are scored by a deterministic grader on five weighted criteria (total = 1.0):
+Episodes are scored by a deterministic grader on six weighted criteria (total = 1.0):
 
 | Criterion | Weight | Description |
 |-----------|--------|-------------|
-| Decision correctness | 0.40 | Exact match = 1.0, partial credit for related decisions |
+| Decision correctness | 0.35 | Exact match = 1.0, partial credit for related decisions |
 | Exception type | 0.20 | Correct classification of the exception |
-| Evidence sufficiency | 0.20 | Did the agent inspect the right documents? |
+| Evidence sufficiency | 0.15 | Did the agent inspect the right documents? |
 | Investigation quality | 0.10 | Breadth of document review and findings |
+| Explanation quality | 0.10 | Cites specific numbers, references policy, uses correct terminology |
 | Efficiency | 0.10 | Completing within step budget without waste |
 
 ## Decisions
@@ -201,35 +208,20 @@ openenv push
 # or: openenv push --namespace my-org --private
 ```
 
-## Baseline Scores
+## Baseline Scores (12 tasks)
 
-### gpt-4o-mini
+| Model | Avg Score | task_1 | task_2 | task_3 | task_4 | task_5 | task_6 | task_7 | task_8 | task_9 | task_10 | task_11 | task_12 |
+|-------|-----------|--------|--------|--------|--------|--------|--------|--------|--------|--------|---------|---------|---------|
+| **gpt-4.1-mini** | **0.87** | 0.95 | 0.78 | 0.75 | 0.95 | 0.78 | 0.95 | 0.75 | 0.75 | 0.95 | 0.95 | 0.98 | 0.95 |
+| **gpt-5.4-mini** | **0.87** | 0.98 | 0.95 | 0.73 | 0.98 | 0.75 | 0.98 | 0.75 | 0.50 | 0.95 | 0.98 | 0.98 | 0.95 |
+| **gpt-4.1** | **0.79** | 0.95 | 0.75 | 0.75 | 0.47 | 0.78 | 0.95 | 0.78 | 0.75 | 0.40 | 0.95 | 0.95 | 0.95 |
+| **gpt-5.4** | **0.78** | 0.95 | 0.75 | 0.70 | 0.47 | 0.75 | 0.95 | 0.78 | 0.75 | 0.40 | 0.95 | 0.95 | 0.95 |
 
-| Task | Score | Decision | Steps |
-|------|-------|----------|-------|
-| `task_1_clean_match` | 0.95 | `approve_for_payment` | 9 |
-| `task_2_partial_receipt` | 0.75 | `place_on_hold` | 8 |
-| `task_3_price_variance` | 0.75 | `escalate_for_supervisor_review` | 8 |
-| `task_4_duplicate_invoice` | 0.98 | `reject_invoice` | 8 |
-| `task_5_mixed_discrepancy` | 0.78 | `escalate_for_supervisor_review` | 9 |
-| `task_6_false_positive_duplicate` | 0.35 | `reject_invoice` (incorrect) | 10 |
-
-Average: **0.76**
-
-### gpt-4o
-
-| Task | Score | Decision | Steps |
-|------|-------|----------|-------|
-| `task_1_clean_match` | 0.95 | `approve_for_payment` | 8 |
-| `task_2_partial_receipt` | 0.78 | `place_on_hold` | 7 |
-| `task_3_price_variance` | 0.78 | `escalate_for_supervisor_review` | 7 |
-| `task_4_duplicate_invoice` | 0.86 | `reject_invoice` | 9 |
-| `task_5_mixed_discrepancy` | 0.78 | `escalate_for_supervisor_review` | 7 |
-| `task_6_false_positive_duplicate` | 0.95 | `approve_for_payment` | 10 |
-
-Average: **0.85**
-
-Task 6 demonstrates strong model discrimination: gpt-4o correctly identifies the false-positive duplicate as a legitimate invoice, while gpt-4o-mini falls for the trap.
+Key observations:
+- **Task 9** (clean invoice from risky vendor) is a strong false-positive trap: both gpt-4.1 and gpt-5.4 escalated instead of approving, scoring only 0.40.
+- **Task 8** (split invoice pattern) tripped gpt-5.4-mini, which rejected instead of escalating (0.50).
+- **Task 4** (duplicate invoice) tripped both full-size models, which escalated instead of rejecting (0.47).
+- Mini models consistently outperform their larger counterparts on this benchmark, suggesting the tasks reward focused analysis over verbose reasoning.
 
 ## Project Structure
 

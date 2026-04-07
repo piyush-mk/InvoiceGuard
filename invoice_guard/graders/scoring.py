@@ -1,14 +1,16 @@
 """
 Deterministic grading logic for InvoiceGuard episodes.
 
-Scores 0.0-1.0 with partial credit across five rubric dimensions:
-  - Final decision correctness  (0.40)
+Scores 0.0-1.0 with partial credit across six rubric dimensions:
+  - Final decision correctness  (0.35)
   - Exception type correctness  (0.20)
-  - Evidence sufficiency         (0.20)
+  - Evidence sufficiency         (0.15)
   - Investigation quality        (0.10)
+  - Explanation quality          (0.10)
   - Efficiency                   (0.10)
 """
 
+import re
 from typing import List, Optional
 
 try:
@@ -21,10 +23,11 @@ except ImportError:
     )
 
 
-W_DECISION = 0.40
+W_DECISION = 0.35
 W_EXCEPTION = 0.20
-W_EVIDENCE = 0.20
+W_EVIDENCE = 0.15
 W_INVESTIGATION = 0.10
+W_EXPLANATION = 0.10
 W_EFFICIENCY = 0.10
 
 
@@ -96,7 +99,18 @@ def grade_episode(case: CaseData, env_state: InvoiceGuardState) -> GraderResult:
         "score": investigation_score,
     }
 
-    # -- 5. Efficiency (0.10) --------------------------------------------
+    # -- 5. Explanation quality (0.10) -----------------------------------
+    explanation_score = _score_explanation(
+        explanation=env_state.final_explanation,
+        case=case,
+        key_findings=gt.key_findings,
+    )
+    breakdown["explanation"] = {
+        "explanation": env_state.final_explanation,
+        "score": explanation_score,
+    }
+
+    # -- 6. Efficiency (0.10) --------------------------------------------
     efficiency_score = _score_efficiency(
         steps_used=env_state.step_count,
         max_steps=case.max_steps,
@@ -115,6 +129,7 @@ def grade_episode(case: CaseData, env_state: InvoiceGuardState) -> GraderResult:
         + W_EXCEPTION * exception_score
         + W_EVIDENCE * evidence_score
         + W_INVESTIGATION * investigation_score
+        + W_EXPLANATION * explanation_score
         + W_EFFICIENCY * efficiency_score
     )
     total = round(min(max(total, 0.0), 1.0), 4)
@@ -125,6 +140,7 @@ def grade_episode(case: CaseData, env_state: InvoiceGuardState) -> GraderResult:
         exception_type_score=round(exception_score, 4),
         evidence_score=round(evidence_score, 4),
         investigation_score=round(investigation_score, 4),
+        explanation_score=round(explanation_score, 4),
         efficiency_score=round(efficiency_score, 4),
         breakdown=breakdown,
     )
@@ -184,6 +200,58 @@ def _score_investigation(
     doc_bonus = min(len(documents_revealed) * 0.15, 0.3)
 
     return min(coverage + doc_bonus, 1.0)
+
+
+def _score_explanation(
+    explanation: str,
+    case: CaseData,
+    key_findings: List[str],
+) -> float:
+    """Score the agent's final explanation for quality signals."""
+    if not explanation:
+        return 0.0
+
+    text = explanation.lower()
+    score = 0.0
+    checks = 0
+    hits = 0
+
+    checks += 1
+    if _contains_number(text):
+        hits += 1
+
+    checks += 1
+    policy_terms = ["policy", "tolerance", "threshold", "escalat", "within"]
+    if any(t in text for t in policy_terms):
+        hits += 1
+
+    checks += 1
+    decision_terms = [
+        "approve", "reject", "hold", "escalat", "duplicate",
+        "mismatch", "variance", "discrepancy", "match",
+    ]
+    if any(t in text for t in decision_terms):
+        hits += 1
+
+    checks += 1
+    if len(explanation.split()) >= 8:
+        hits += 1
+
+    checks += 1
+    finding_hits = 0
+    for kf in key_findings:
+        kf_words = set(kf.lower().split())
+        if len(kf_words.intersection(set(text.split()))) >= 2:
+            finding_hits += 1
+    if finding_hits > 0:
+        hits += 1
+
+    score = hits / checks if checks > 0 else 0.0
+    return round(min(score, 1.0), 4)
+
+
+def _contains_number(text: str) -> bool:
+    return bool(re.search(r'\d+\.?\d*', text))
 
 
 def _score_efficiency(

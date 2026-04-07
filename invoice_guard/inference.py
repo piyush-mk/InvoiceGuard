@@ -12,9 +12,8 @@ STDOUT FORMAT (mandatory):
 
 Environment variables (mandatory):
     API_BASE_URL       -- LLM API endpoint (default: https://api.openai.com/v1)
-    MODEL_NAME         -- model identifier (default: gpt-4o-mini)
-    HF_TOKEN           -- Hugging Face token / primary API key
-    OPENAI_API_KEY     -- Fallback API key for the LLM provider
+    MODEL_NAME         -- model identifier (default: gpt-4.1-mini)
+    HF_TOKEN           -- Your Hugging Face / API key
     LOCAL_IMAGE_NAME   -- Docker image name (uses from_docker_image when set)
 """
 
@@ -28,6 +27,17 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from openai import OpenAI
 
+_MODELS_USING_MAX_COMPLETION_TOKENS = {"gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano",
+                                        "gpt-5", "gpt-5-mini", "gpt-5.1"}
+
+
+def _token_limit_kwarg(model_name: str, limit: int = 512) -> dict:
+    """Return the correct token-limit parameter for the model."""
+    for prefix in _MODELS_USING_MAX_COMPLETION_TOKENS:
+        if model_name.startswith(prefix):
+            return {"max_completion_tokens": limit}
+    return {"max_tokens": limit}
+
 from models import (
     ActionType, DecisionType, ExceptionType, InvoiceGuardAction, TaskID,
 )
@@ -36,9 +46,8 @@ from tasks import get_task_case, TASK_LIST
 load_dotenv()
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
-HF_TOKEN = os.getenv("HF_TOKEN")
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY") or ""
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4.1-mini")
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY") or os.getenv("OPENAI_API_KEY") or ""
 LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME")
 
 BENCHMARK = "invoice_guard"
@@ -86,7 +95,7 @@ Complete a thorough investigation before resolving. Inspect at least: purchase o
 RESPONSE FORMAT:
 - Respond with ONLY a valid JSON object. No markdown, no commentary.
 - Investigation example: {"action_type": "inspect_purchase_order"}
-- Resolution example: {"action_type": "submit_final_resolution", "final_decision": "approve_for_payment", "exception_type": "clean_match", "evidence_references": ["inspect_purchase_order", "compare_quantity"], "explanation": "All documents match within tolerance."}
+- Resolution example: {"action_type": "submit_final_resolution", "final_decision": "approve_for_payment", "exception_type": "clean_match", "evidence_references": ["inspect_purchase_order", "compare_quantity"], "explanation": "All documents match within tolerance.", "confidence": 0.9}
 
 RULES:
 - Pay close attention to POLICY findings -- they tell you when escalation is required.
@@ -192,6 +201,14 @@ def build_action(params: dict) -> InvoiceGuardAction:
     if params.get("explanation"):
         kwargs["explanation"] = str(params["explanation"])
 
+    if params.get("confidence") is not None:
+        try:
+            conf = float(params["confidence"])
+            if 0.0 <= conf <= 1.0:
+                kwargs["confidence"] = conf
+        except (ValueError, TypeError):
+            pass
+
     return InvoiceGuardAction(**kwargs)
 
 
@@ -232,7 +249,7 @@ def run_episode_local(env, client: OpenAI, task_id: TaskID) -> dict:
                     "model": MODEL_NAME,
                     "messages": messages,
                     "temperature": 0.0,
-                    "max_tokens": 512,
+                    **_token_limit_kwarg(MODEL_NAME),
                 }
                 try:
                     api_kwargs["response_format"] = {"type": "json_object"}
@@ -320,7 +337,7 @@ async def run_episode_docker(env, client: OpenAI, task_id: TaskID) -> dict:
                     "model": MODEL_NAME,
                     "messages": messages,
                     "temperature": 0.0,
-                    "max_tokens": 512,
+                    **_token_limit_kwarg(MODEL_NAME),
                 }
                 try:
                     api_kwargs["response_format"] = {"type": "json_object"}
