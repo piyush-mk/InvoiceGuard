@@ -74,6 +74,8 @@ class TaskID(str, Enum):
     task_4c_policy_violation = "task_4c_policy_violation"
     task_5_mixed_discrepancy = "task_5_mixed_discrepancy"
     task_6_false_positive_duplicate = "task_6_false_positive_duplicate"
+    task_7_retroactive_price = "task_7_retroactive_price"
+    task_8_split_invoice_pattern = "task_8_split_invoice_pattern"
 
 
 class Difficulty(str, Enum):
@@ -202,6 +204,7 @@ class InvoiceGuardAction(Action):
     exception_type: Optional[ExceptionType] = None
     evidence_references: List[str] = Field(default_factory=list)
     explanation: str = ""
+    confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
 
 # -- OpenEnv Observation -----------------------------------------------------
@@ -216,6 +219,7 @@ class InvoiceGuardObservation(Observation):
     invoice_summary: str = ""
     goal: str = ""
     available_actions: List[str] = Field(default_factory=list)
+    suggested_next_actions: List[str] = Field(default_factory=list)
     revealed_documents: List[str] = Field(default_factory=list)
     findings: List[str] = Field(default_factory=list)
     remaining_steps: int = 0
@@ -244,6 +248,7 @@ class InvoiceGuardState(State):
     final_exception_type: Optional[str] = None
     final_evidence: List[str] = Field(default_factory=list)
     final_explanation: str = ""
+    final_confidence: Optional[float] = None
     cumulative_reward: float = 0.0
     repeated_action_counts: Dict[str, int] = Field(default_factory=dict)
 
@@ -259,5 +264,6 @@ class GraderResult(BaseModel):
     exception_type_score: float = 0.0
     evidence_score: float = 0.0
     investigation_score: float = 0.0
+    explanation_score: float = 0.0
     efficiency_score: float = 0.0
     breakdown: Dict[str, Any] = Field(default_factory=dict)

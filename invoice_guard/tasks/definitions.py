@@ -30,6 +30,8 @@ TASK_LIST: List[TaskID] = [
     TaskID.task_4_duplicate_invoice,
     TaskID.task_5_mixed_discrepancy,
     TaskID.task_6_false_positive_duplicate,
+    TaskID.task_7_retroactive_price,
+    TaskID.task_8_split_invoice_pattern,
 ]
 
 ALL_TASKS: List[TaskID] = [
@@ -47,6 +49,8 @@ ALL_TASKS: List[TaskID] = [
     TaskID.task_4c_policy_violation,
     TaskID.task_5_mixed_discrepancy,
     TaskID.task_6_false_positive_duplicate,
+    TaskID.task_7_retroactive_price,
+    TaskID.task_8_split_invoice_pattern,
 ]
 
 
@@ -67,6 +71,8 @@ def get_task_case(task_id: TaskID) -> CaseData:
         TaskID.task_4c_policy_violation: _build_task_4c,
         TaskID.task_5_mixed_discrepancy: _build_task_5,
         TaskID.task_6_false_positive_duplicate: _build_task_6,
+        TaskID.task_7_retroactive_price: _build_task_7,
+        TaskID.task_8_split_invoice_pattern: _build_task_8,
     }
     return builders[task_id]()
 
@@ -1353,6 +1359,246 @@ def _build_task_6() -> CaseData:
                 "Quantities and prices match PO exactly",
                 "No actual duplicate -- this is a legitimate recurring service invoice",
                 "Vendor has 0 duplicate risk incidents",
+            ],
+        ),
+    )
+
+
+# -- Task 7: Retroactive Price Adjustment -----------------------------------
+# Difficulty: hard | Decision: escalate_for_supervisor_review | Exception: price_mismatch
+# Vendor had a contract price change effective 2024-11-01, but the PO was issued
+# at the old price on 2024-10-20. The invoice uses the NEW (higher) price.
+# Agent must notice the temporal mismatch: PO predates the price change, so the
+# PO price is the agreed-upon price. The invoice price exceeds tolerance.
+# Tests temporal reasoning and policy awareness.
+
+
+def _build_task_7() -> CaseData:
+    return CaseData(
+        case_id="CASE-7001",
+        task_id=TaskID.task_7_retroactive_price,
+        difficulty=Difficulty.hard,
+        max_steps=12,
+        invoice=Invoice(
+            invoice_number="INV-2024-1150",
+            supplier_name="Precision Parts Ltd",
+            supplier_id="SUP-7100",
+            invoice_date="2024-11-10",
+            po_reference="PO-7500",
+            line_items=[
+                InvoiceLineItem(
+                    item_code="ITEM-PP01",
+                    description="CNC Bearing Assembly Type-R",
+                    quantity_billed=200,
+                    unit_price_billed=47.50,
+                    line_total_billed=9500.00,
+                ),
+                InvoiceLineItem(
+                    item_code="ITEM-PP02",
+                    description="Hydraulic Seal Kit Grade-A",
+                    quantity_billed=500,
+                    unit_price_billed=12.80,
+                    line_total_billed=6400.00,
+                ),
+            ],
+            subtotal=15900.00,
+            tax=1272.00,
+            total_amount=17172.00,
+            note="Prices reflect updated catalog effective 2024-11-01.",
+        ),
+        purchase_order=PurchaseOrder(
+            po_number="PO-7500",
+            supplier_id="SUP-7100",
+            order_date="2024-10-20",
+            line_items=[
+                POLineItem(
+                    item_code="ITEM-PP01",
+                    description="CNC Bearing Assembly Type-R",
+                    ordered_quantity=200,
+                    unit_price_ordered=42.00,
+                    line_total_ordered=8400.00,
+                ),
+                POLineItem(
+                    item_code="ITEM-PP02",
+                    description="Hydraulic Seal Kit Grade-A",
+                    ordered_quantity=500,
+                    unit_price_ordered=11.50,
+                    line_total_ordered=5750.00,
+                ),
+            ],
+            payment_terms="Net 45",
+        ),
+        goods_receipt_note=GoodsReceiptNote(
+            grn_number="GRN-12500",
+            po_reference="PO-7500",
+            receipt_date="2024-11-05",
+            line_items=[
+                GRNLineItem(
+                    item_code="ITEM-PP01",
+                    quantity_received=200,
+                    accepted_quantity=200,
+                ),
+                GRNLineItem(
+                    item_code="ITEM-PP02",
+                    quantity_received=500,
+                    accepted_quantity=500,
+                ),
+            ],
+            warehouse_note="All items received in good condition. Full order.",
+        ),
+        vendor_profile=VendorProfile(
+            supplier_id="SUP-7100",
+            supplier_name="Precision Parts Ltd",
+            risk_tier="medium",
+            duplicate_risk_count=0,
+            preferred_vendor=True,
+            escalation_threshold=15000.00,
+        ),
+        company_policy=CompanyPolicy(
+            quantity_tolerance_pct=5.0,
+            price_tolerance_pct=5.0,
+            total_tolerance_amt=500.0,
+            duplicate_check_enabled=True,
+            high_value_threshold=50000.0,
+        ),
+        case_history=CaseHistory(
+            prior_comments=[
+                "Vendor announced price increase effective 2024-11-01.",
+                "PO-7500 was placed on 2024-10-20 at the old catalog prices.",
+                "Contract terms: PO price governs unless amended before shipment.",
+            ],
+        ),
+        ground_truth=GroundTruth(
+            correct_decision=DecisionType.escalate_for_supervisor_review,
+            correct_exception_type=ExceptionType.price_mismatch,
+            acceptable_evidence=[
+                "inspect_purchase_order",
+                "inspect_goods_receipt_note",
+                "compare_price",
+                "inspect_policy_rules",
+                "inspect_vendor_profile",
+            ],
+            key_findings=[
+                "ITEM-PP01 billed at $47.50 vs PO price $42.00 (13.1% variance)",
+                "ITEM-PP02 billed at $12.80 vs PO price $11.50 (11.3% variance)",
+                "Both exceed 5% price tolerance",
+                "PO was issued 2024-10-20, before price change effective 2024-11-01",
+                "Per contract terms, PO price governs unless PO is amended",
+                "Invoice total $17,172 exceeds vendor escalation threshold $15,000",
+            ],
+        ),
+    )
+
+
+# -- Task 8: Adversarial Split-Invoice Pattern --------------------------------
+# Difficulty: hard | Decision: escalate_for_supervisor_review | Exception: policy_violation
+# Supplier splits a large order into multiple smaller invoices to stay below
+# the auto-approval threshold ($50,000). Each individual invoice looks clean,
+# but case history reveals a pattern of split invoicing from this vendor.
+# Agent must check vendor profile (high duplicate risk count) and case history
+# to detect the pattern. Tests cross-case pattern recognition.
+
+
+def _build_task_8() -> CaseData:
+    return CaseData(
+        case_id="CASE-8001",
+        task_id=TaskID.task_8_split_invoice_pattern,
+        difficulty=Difficulty.hard,
+        max_steps=12,
+        invoice=Invoice(
+            invoice_number="INV-2024-2210",
+            supplier_name="Global Tech Supplies",
+            supplier_id="SUP-8200",
+            invoice_date="2024-12-01",
+            po_reference="PO-8800",
+            line_items=[
+                InvoiceLineItem(
+                    item_code="ITEM-GT10",
+                    description="Enterprise Server Rack Unit 42U",
+                    quantity_billed=3,
+                    unit_price_billed=14500.00,
+                    line_total_billed=43500.00,
+                ),
+            ],
+            subtotal=43500.00,
+            tax=3480.00,
+            total_amount=46980.00,
+            note="Shipment 3 of 3. Final batch for data center buildout.",
+        ),
+        purchase_order=PurchaseOrder(
+            po_number="PO-8800",
+            supplier_id="SUP-8200",
+            order_date="2024-11-15",
+            line_items=[
+                POLineItem(
+                    item_code="ITEM-GT10",
+                    description="Enterprise Server Rack Unit 42U",
+                    ordered_quantity=3,
+                    unit_price_ordered=14500.00,
+                    line_total_ordered=43500.00,
+                ),
+            ],
+            payment_terms="Net 30",
+        ),
+        goods_receipt_note=GoodsReceiptNote(
+            grn_number="GRN-15200",
+            po_reference="PO-8800",
+            receipt_date="2024-11-28",
+            line_items=[
+                GRNLineItem(
+                    item_code="ITEM-GT10",
+                    quantity_received=3,
+                    accepted_quantity=3,
+                ),
+            ],
+            warehouse_note="Final batch received. All 9 rack units now in inventory.",
+        ),
+        vendor_profile=VendorProfile(
+            supplier_id="SUP-8200",
+            supplier_name="Global Tech Supplies",
+            risk_tier="high",
+            duplicate_risk_count=4,
+            preferred_vendor=False,
+            escalation_threshold=40000.00,
+        ),
+        company_policy=CompanyPolicy(
+            quantity_tolerance_pct=5.0,
+            price_tolerance_pct=5.0,
+            total_tolerance_amt=500.0,
+            duplicate_check_enabled=True,
+            high_value_threshold=50000.00,
+            mandatory_escalation_above=100000.00,
+        ),
+        case_history=CaseHistory(
+            prior_comments=[
+                "ALERT: Vendor SUP-8200 has submitted 3 invoices this month "
+                "for similar items across 3 separate POs (PO-8600, PO-8700, PO-8800).",
+                "Each invoice is just under the $50,000 auto-approval threshold.",
+                "Combined value: $46,200 + $47,800 + $46,980 = $140,980.",
+                "Finance team flagged potential invoice-splitting pattern.",
+                "Vendor is non-preferred with 4 prior risk incidents.",
+            ],
+            similar_invoice_refs=["INV-2024-2180", "INV-2024-2195"],
+            processed_invoice_numbers=["INV-2024-2180", "INV-2024-2195"],
+        ),
+        ground_truth=GroundTruth(
+            correct_decision=DecisionType.escalate_for_supervisor_review,
+            correct_exception_type=ExceptionType.policy_violation,
+            acceptable_evidence=[
+                "inspect_purchase_order",
+                "inspect_goods_receipt_note",
+                "inspect_vendor_profile",
+                "inspect_policy_rules",
+                "check_for_duplicate_invoice",
+            ],
+            key_findings=[
+                "Invoice $46,980 is just under auto-approval threshold of $50,000",
+                "3 similar invoices from same vendor total $140,980",
+                "Vendor is high-risk tier with 4 prior risk incidents",
+                "Vendor is non-preferred",
+                "Case history explicitly flags split-invoice pattern concern",
+                "Combined value exceeds mandatory escalation threshold of $100,000",
+                "Individual prices and quantities match PO -- no line-level discrepancy",
             ],
         ),
     )

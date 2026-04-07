@@ -29,8 +29,10 @@ Three-way invoice matching is one of the most common and error-prone tasks in en
 | `task_4_duplicate_invoice` | Previously processed invoice resubmitted | Hard | `reject_invoice` | `duplicate_invoice` |
 | `task_5_mixed_discrepancy` | Invoice with both price variance and partial receipt; conflicting signals | Hard | `escalate_for_supervisor_review` | `price_mismatch` |
 | `task_6_false_positive_duplicate` | Invoice looks like a duplicate but is a legitimate recurring order for a different PO | Hard | `approve_for_payment` | `clean_match` |
+| `task_7_retroactive_price` | Vendor applied a price increase retroactively; PO predates the effective date | Hard | `escalate_for_supervisor_review` | `price_mismatch` |
+| `task_8_split_invoice_pattern` | Supplier splits large order into sub-threshold invoices to dodge auto-approval | Hard | `escalate_for_supervisor_review` | `policy_violation` |
 
-Each task includes fully synthetic business documents with deterministic ground truth and a multi-criteria grader. Tasks 5 and 6 are designed to challenge frontier models with ambiguity and conflicting evidence.
+Each task includes fully synthetic business documents with deterministic ground truth and a multi-criteria grader. Tasks 5-8 are designed to challenge frontier models with ambiguity, temporal reasoning, and cross-case pattern detection.
 
 ## Action Space
 
@@ -120,14 +122,15 @@ The environment provides dense, per-step rewards:
 
 ## Grading
 
-Episodes are scored by a deterministic grader on five weighted criteria (total = 1.0):
+Episodes are scored by a deterministic grader on six weighted criteria (total = 1.0):
 
 | Criterion | Weight | Description |
 |-----------|--------|-------------|
-| Decision correctness | 0.40 | Exact match = 1.0, partial credit for related decisions |
+| Decision correctness | 0.35 | Exact match = 1.0, partial credit for related decisions |
 | Exception type | 0.20 | Correct classification of the exception |
-| Evidence sufficiency | 0.20 | Did the agent inspect the right documents? |
+| Evidence sufficiency | 0.15 | Did the agent inspect the right documents? |
 | Investigation quality | 0.10 | Breadth of document review and findings |
+| Explanation quality | 0.10 | Cites specific numbers, references policy, uses correct terminology |
 | Efficiency | 0.10 | Completing within step budget without waste |
 
 ## Decisions
@@ -203,33 +206,22 @@ openenv push
 
 ## Baseline Scores
 
-### gpt-4o-mini
-
-| Task | Score | Decision | Steps |
-|------|-------|----------|-------|
-| `task_1_clean_match` | 0.95 | `approve_for_payment` | 9 |
-| `task_2_partial_receipt` | 0.75 | `place_on_hold` | 8 |
-| `task_3_price_variance` | 0.75 | `escalate_for_supervisor_review` | 8 |
-| `task_4_duplicate_invoice` | 0.98 | `reject_invoice` | 8 |
-| `task_5_mixed_discrepancy` | 0.78 | `escalate_for_supervisor_review` | 9 |
-| `task_6_false_positive_duplicate` | 0.35 | `reject_invoice` (incorrect) | 10 |
-
-Average: **0.76**
-
-### gpt-4o
+### gpt-4o-mini (8 tasks)
 
 | Task | Score | Decision | Steps |
 |------|-------|----------|-------|
 | `task_1_clean_match` | 0.95 | `approve_for_payment` | 8 |
-| `task_2_partial_receipt` | 0.78 | `place_on_hold` | 7 |
+| `task_2_partial_receipt` | 0.75 | `place_on_hold` | 8 |
 | `task_3_price_variance` | 0.78 | `escalate_for_supervisor_review` | 7 |
-| `task_4_duplicate_invoice` | 0.86 | `reject_invoice` | 9 |
-| `task_5_mixed_discrepancy` | 0.78 | `escalate_for_supervisor_review` | 7 |
-| `task_6_false_positive_duplicate` | 0.95 | `approve_for_payment` | 10 |
+| `task_4_duplicate_invoice` | 0.96 | `reject_invoice` | 8 |
+| `task_5_mixed_discrepancy` | 0.78 | `escalate_for_supervisor_review` | 8 |
+| `task_6_false_positive_duplicate` | 0.38 | `reject_invoice` (incorrect) | 10 |
+| `task_7_retroactive_price` | 0.75 | `escalate_for_supervisor_review` | 8 |
+| `task_8_split_invoice_pattern` | 0.72 | `escalate_for_supervisor_review` | 10 |
 
-Average: **0.85**
+Average: **0.76**
 
-Task 6 demonstrates strong model discrimination: gpt-4o correctly identifies the false-positive duplicate as a legitimate invoice, while gpt-4o-mini falls for the trap.
+Tasks 6-8 demonstrate meaningful difficulty: Task 6 is a false-positive trap, Task 7 requires temporal reasoning about contract dates, and Task 8 requires cross-case pattern detection of invoice splitting.
 
 ## Project Structure
 

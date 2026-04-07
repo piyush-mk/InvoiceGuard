@@ -86,7 +86,7 @@ Complete a thorough investigation before resolving. Inspect at least: purchase o
 RESPONSE FORMAT:
 - Respond with ONLY a valid JSON object. No markdown, no commentary.
 - Investigation example: {"action_type": "inspect_purchase_order"}
-- Resolution example: {"action_type": "submit_final_resolution", "final_decision": "approve_for_payment", "exception_type": "clean_match", "evidence_references": ["inspect_purchase_order", "compare_quantity"], "explanation": "All documents match within tolerance."}
+- Resolution example: {"action_type": "submit_final_resolution", "final_decision": "approve_for_payment", "exception_type": "clean_match", "evidence_references": ["inspect_purchase_order", "compare_quantity"], "explanation": "All documents match within tolerance.", "confidence": 0.9}
 
 RULES:
 - Pay close attention to POLICY findings -- they tell you when escalation is required.
@@ -191,6 +191,14 @@ def build_action(params: dict) -> InvoiceGuardAction:
 
     if params.get("explanation"):
         kwargs["explanation"] = str(params["explanation"])
+
+    if params.get("confidence") is not None:
+        try:
+            conf = float(params["confidence"])
+            if 0.0 <= conf <= 1.0:
+                kwargs["confidence"] = conf
+        except (ValueError, TypeError):
+            pass
 
     return InvoiceGuardAction(**kwargs)
 
