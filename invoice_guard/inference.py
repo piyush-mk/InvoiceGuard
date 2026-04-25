@@ -97,6 +97,18 @@ RESPONSE FORMAT:
 - Investigation example: {"action_type": "inspect_purchase_order"}
 - Resolution example: {"action_type": "submit_final_resolution", "final_decision": "approve_for_payment", "exception_type": "clean_match", "evidence_references": ["inspect_purchase_order", "compare_quantity"], "explanation": "All documents match within tolerance.", "confidence": 0.9}
 
+EXCEPTION TYPE OPTIONS:
+- clean_match: all documents match within tolerance
+- quantity_mismatch: billed quantity exceeds ordered quantity
+- price_mismatch: billed unit price exceeds PO-agreed price
+- total_amount_mismatch: invoice subtotal/total math is inconsistent
+- partial_receipt: invoice bills more than has been received
+- missing_receipt: no valid GRN supports the invoice/period
+- duplicate_invoice: same invoice or already-paid duplicate detected
+- tax_variance: tax amount differs from policy or expected value
+- policy_violation: policy requires hold/escalation despite matching docs
+- mixed_discrepancy: multiple material exception types are present
+
 RULES:
 - Pay close attention to POLICY findings -- they tell you when escalation is required.
 - When multiple issues exist, escalation takes priority over hold.

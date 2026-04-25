@@ -4,3 +4,4 @@ __pycache__/
 .env
 references/
 invoice_guard/test_live_space.py
+invoice_guard/outputs/
