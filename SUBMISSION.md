@@ -393,7 +393,15 @@ The training pipeline has two stages:
 
 ### Trained model results
 
-*Results will be updated when the current training jobs complete.*
+Round 2 SFT runs completed with clear improvement over the local untrained baseline:
+
+| Model | Grader Score | Success Rate | Avg Steps | Notes |
+|-------|--------------|--------------|-----------|-------|
+| Local baseline (no training) | 0.137 | 0% | 12.0 | Investigates repeatedly, does not submit |
+| SFT v5c (best epoch) | 0.729 | 75% | 3.0 | Best performing submit-focused run |
+| SFT v5d (best checkpoint) | 0.704 | 75% | 4.25 | Stable checkpointed variant |
+
+This is a 5.3x score improvement from local baseline to best trained checkpoint.
 
 ### Training infrastructure
 
