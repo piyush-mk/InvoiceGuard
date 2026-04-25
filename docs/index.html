@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InvoiceGuard Demo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="./index.html">InvoiceGuard Demo</a>
+        <div class="nav-links">
+          <a href="index.html">Home Demo</a>
+          <a href="tasks.html">Tasks & Scoring</a>
+          <a href="blog.html">One-page Blog</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="hero">
+        <span class="badge">OpenEnv Round 2 Demo</span>
+        <h1>Train an agent that investigates and actually resolves invoices</h1>
+        <p>
+          This is a fast, static demo site for the project narrative. It shows baseline vs trained
+          behavior, training curves, and links to all artifacts in Hugging Face.
+        </p>
+        <div class="demo-controls">
+          <a class="btn" data-space-link target="_blank" rel="noreferrer">Open Environment Space</a>
+          <a class="btn" data-code-link target="_blank" rel="noreferrer">Open Code Repo</a>
+          <a class="btn" data-sft-v5c-link target="_blank" rel="noreferrer">Best SFT Adapter (v5c)</a>
+          <a class="btn" data-sft-v5d-link target="_blank" rel="noreferrer">Best Checkpoint (v5d)</a>
+        </div>
+      </section>
+
+      <section class="card-grid">
+        <article class="metric-card">
+          <div class="label">Local baseline score</div>
+          <div class="value" id="baselineScore">-</div>
+        </article>
+        <article class="metric-card">
+          <div class="label">Best SFT score</div>
+          <div class="value" id="bestScore">-</div>
+        </article>
+        <article class="metric-card">
+          <div class="label">Peak success rate</div>
+          <div class="value" id="successRate">-</div>
+        </article>
+        <article class="metric-card">
+          <div class="label">Improvement</div>
+          <div class="value" id="multiplier">-</div>
+        </article>
+      </section>
+
+      <section class="section-card">
+        <h2>Interactive behavior demo</h2>
+        <p>
+          Click through two representative tasks to compare baseline action loops vs trained
+          resolution behavior.
+        </p>
+        <div class="demo-controls">
+          <button id="prevCase">Previous case</button>
+          <button id="nextCase">Next case</button>
+          <span class="badge" id="caseTitle">Loading...</span>
+        </div>
+        <p id="caseSummary"></p>
+        <div class="split">
+          <article class="section-card">
+            <h3>Baseline action sequence (untrained)</h3>
+            <p>Tends to investigate repeatedly and timeout at 12 steps.</p>
+            <ol class="actions" id="baselineList"></ol>
+          </article>
+          <article class="section-card">
+            <h3>Trained action sequence (SFT)</h3>
+            <p>Investigates quickly, then reaches `submit_final_resolution` in 3-5 steps.</p>
+            <ol class="actions" id="trainedList"></ol>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <h2>Training curves and evidence</h2>
+        <p>
+          Required judging evidence is embedded directly in-repo as static images for reproducible
+          review.
+        </p>
+        <div class="img-grid">
+          <figure class="img-card">
+            <img src="./assets/img/sft_eval_grader_score.png" alt="SFT eval grader score curve" />
+            <figcaption class="caption">Grader score moves from baseline-level to 0.70+ during SFT.</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="./assets/img/sft_success_rate.png" alt="SFT success rate curve" />
+            <figcaption class="caption">Success rate climbs from 0% to 75% on holdout tasks.</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="./assets/img/sft_training_loss.png" alt="SFT training loss curve" />
+            <figcaption class="caption">Loss drops rapidly, showing fast adaptation to submit behavior.</figcaption>
+          </figure>
+          <figure class="img-card">
+            <img src="./assets/img/sft_avg_steps.png" alt="SFT average steps curve" />
+            <figcaption class="caption">Steps reduce from timeout behavior to efficient resolution.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <p class="footer">
+        GitHub Pages-ready static site. No backend required. If anything fails to load, check
+        <code id="appError"></code>
+      </p>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+  </html>

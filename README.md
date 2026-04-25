@@ -1,8 +1,10 @@
-# InvoiceGuard -- Three-Way Invoice Matching Environment
+# InvoiceGuard: Three-Way Invoice Matching Environment
 
-An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates accounts payable exception resolution. An AI agent investigates multi-document business cases -- invoices, purchase orders, goods receipt notes, vendor profiles, and company policies -- to detect discrepancies, classify exception types, and render correct decisions.
+An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates accounts payable exception resolution. An AI agent investigates multi-document business cases across invoices, purchase orders, goods receipt notes, vendor profiles, and company policies to detect discrepancies, classify exception types, and render correct decisions.
 
 **Hugging Face Space:** [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
+**Hugging Face Code Repo:** [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code)
+**Static Demo UI (GitHub Pages source):** `docs/`
 
 ## Motivation
 
@@ -20,8 +22,8 @@ Three-way invoice matching is one of the most common and error-prone tasks in en
 | `task_6_false_positive_duplicate` | Invoice looks like a duplicate but is a legitimate recurring order for a different PO | Hard | `approve_for_payment` | `clean_match` |
 | `task_7_retroactive_price` | Vendor applied a price increase retroactively; PO predates the effective date | Hard | `escalate_for_supervisor_review` | `price_mismatch` |
 | `task_8_split_invoice_pattern` | Supplier splits large order into sub-threshold invoices to dodge auto-approval | Hard | `escalate_for_supervisor_review` | `policy_violation` |
-| `task_9_clean_from_risky_vendor` | Clean invoice from high-risk vendor with 5 prior incidents -- false-positive trap | Hard | `approve_for_payment` | `clean_match` |
-| `task_10_rounding_false_alarm` | Invoice total off by $0.01 due to line-item rounding -- all else matches perfectly | Hard | `approve_for_payment` | `clean_match` |
+| `task_9_clean_from_risky_vendor` | Clean invoice from high-risk vendor with 5 prior incidents, a false-positive trap | Hard | `approve_for_payment` | `clean_match` |
+| `task_10_rounding_false_alarm` | Invoice total off by $0.01 due to line-item rounding, while everything else matches | Hard | `approve_for_payment` | `clean_match` |
 | `task_11_authorized_overship` | GRN shows 110 received vs 100 ordered, but PO amendment authorized 10% overship | Hard | `approve_for_payment` | `clean_match` |
 | `task_12_corrected_resubmission` | Corrected invoice (INV-R1) looks like a duplicate of rejected original | Hard | `approve_for_payment` | `clean_match` |
 
@@ -141,7 +143,7 @@ Episodes are scored by a deterministic grader on six weighted criteria (total = 
 
 ## Baseline Scores
 
-### API Baselines -- Canonical Tasks (12 tasks)
+### API Baselines: Canonical Tasks (12 tasks)
 
 | Model | Type | Avg Score | Decision Correct Rate |
 |-------|------|-----------|----------------------|
@@ -151,7 +153,7 @@ Episodes are scored by a deterministic grader on six weighted criteria (total = 
 | **Qwen3-4B-Instruct-2507** | Open-weight | **0.83** | 83% |
 | **Qwen2.5-7B-Instruct** | Open-weight | **0.70** | 58% |
 
-### API Baselines -- Hard Tasks (10 tasks)
+### API Baselines: Hard Tasks (10 tasks)
 
 | Model | Type | Avg Score | Decision Correct Rate |
 |-------|------|-----------|----------------------|
@@ -213,7 +215,7 @@ One-page comparison of baseline vs trained checkpoints across score, success rat
 
 ### What Worked: Submit-Focused SFT
 
-Standard SFT on full expert traces failed -- the model memorized investigation actions (90% of training data) and never learned to submit. Our breakthrough was **submit-only SFT**: training exclusively on `submit_final_resolution` examples with full conversation context.
+Standard SFT on full expert traces failed because the model memorized investigation actions (90% of training data) and never learned to submit. Our breakthrough was **submit-only SFT**: training exclusively on `submit_final_resolution` examples with full conversation context.
 
 | Technique | Score | Why |
 |-----------|-------|-----|
@@ -227,7 +229,7 @@ The base model already knows how to investigate. Training on investigation examp
 ### Training Configuration
 
 - **Base model:** Qwen/Qwen3-4B-Instruct-2507
-- **Precision:** bf16 (NOT 4-bit -- quantization degraded all results)
+- **Precision:** bf16 (NOT 4-bit, because quantization degraded all results)
 - **Method:** LoRA (r=16, alpha=32) on attention projections
 - **Data:** 36 submit-only examples (18 tasks x 2 trace lengths)
 - **Loss weighting:** 5x on submit examples
@@ -365,6 +367,23 @@ uv run python -m training.train_sft \
   --num-epochs 12 \
   --lr 5e-5
 ```
+
+## Minimal Demo UI (GitHub Pages)
+
+A lightweight static demo site is included in `docs/` with three pages:
+
+- `docs/index.html`: home demo (baseline vs trained behavior + curves)
+- `docs/tasks.html`: task/scoring explanation
+- `docs/blog.html`: one-page render of `BLOG.md`
+
+### Deploy with GitHub Pages
+
+1. Push this repo to GitHub.
+2. In repository Settings -> Pages:
+   - Source: `Deploy from a branch`
+   - Branch: `main`
+   - Folder: `/docs`
+3. Save. GitHub will publish the site URL automatically.
 
 ## Project Structure
 

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InvoiceGuard Tasks and Scoring</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="./index.html">InvoiceGuard Demo</a>
+        <div class="nav-links">
+          <a href="index.html">Home Demo</a>
+          <a href="tasks.html">Tasks & Scoring</a>
+          <a href="blog.html">One-page Blog</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="hero">
+        <span class="badge">Environment Explainability</span>
+        <h1>Tasks, actions, and scoring in one view</h1>
+        <p>
+          This page explains what the agent sees, what it can do, and how the grader evaluates each
+          episode.
+        </p>
+      </section>
+
+      <section class="section-card">
+        <h2>Task structure</h2>
+        <p>
+          InvoiceGuard contains 12 canonical tasks and 10 hard tasks (22 total). Tasks cover clean
+          matches, duplicates, price mismatches, policy violations, and false-positive traps.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Slice</th>
+              <th>Count</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Canonical</td>
+              <td>12</td>
+              <td>Core AP exception patterns and expected policy decisions</td>
+            </tr>
+            <tr>
+              <td>Hard</td>
+              <td>10</td>
+              <td>Ambiguous edge cases, traps, and deeper multi-document reasoning</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section-card">
+        <h2>Action space</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Investigation</td>
+              <td>
+                inspect_invoice_line_items, inspect_purchase_order, inspect_goods_receipt_note,
+                inspect_vendor_profile, inspect_policy_rules, check_for_duplicate_invoice,
+                compare_quantity, compare_price, compare_totals, summarize_findings
+              </td>
+            </tr>
+            <tr>
+              <td>Proposal</td>
+              <td>propose_exception_type</td>
+            </tr>
+            <tr>
+              <td>Terminal</td>
+              <td>submit_final_resolution</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section-card">
+        <h2>Deterministic grader components</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Weight</th>
+              <th>Interpretation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Decision correctness</td><td>0.35</td><td>Final decision aligns with task ground truth</td></tr>
+            <tr><td>Exception type</td><td>0.20</td><td>Correct classification of issue type</td></tr>
+            <tr><td>Evidence sufficiency</td><td>0.15</td><td>Appropriate documents/actions were used</td></tr>
+            <tr><td>Investigation quality</td><td>0.10</td><td>Depth and quality of exploration</td></tr>
+            <tr><td>Explanation quality</td><td>0.10</td><td>Clear, policy-aware reasoning in resolution</td></tr>
+            <tr><td>Efficiency</td><td>0.10</td><td>Avoids wasted steps and timeouts</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section-card">
+        <h2>Baseline vs trained snapshot</h2>
+        <img
+          src="./assets/img/sft_comparison_summary.png"
+          alt="Comparison chart baseline vs trained"
+          style="width: 100%; border-radius: 12px; border: 1px solid var(--border)"
+        />
+        <p>
+          The key transition is from endless investigation loops (baseline) to timely evidence-backed
+          submissions (trained SFT checkpoints).
+        </p>
+      </section>
+
+      <section class="section-card">
+        <h2>Artifact links</h2>
+        <div class="demo-controls">
+          <a class="btn" data-space-link target="_blank" rel="noreferrer">Environment Space</a>
+          <a class="btn" data-code-link target="_blank" rel="noreferrer">Training Code Hub Repo</a>
+          <a class="btn" href="../README.md" target="_blank" rel="noreferrer">Project README</a>
+          <a class="btn" href="../BLOG.md" target="_blank" rel="noreferrer">Project BLOG.md</a>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+  </html>
