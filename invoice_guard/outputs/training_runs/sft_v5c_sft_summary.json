@@ -1,0 +1,34 @@
+{
+  "run_finished_at": "2026-04-25T21:31:19.011984+00:00",
+  "base_model": "Qwen/Qwen3-4B-Instruct-2507",
+  "hub_model_id": "invoiceguard-qwen3-4b-sft-v5c-submit-deep",
+  "num_epochs": 15,
+  "train_tasks": [
+    "task_3_price_variance",
+    "task_9_clean_from_risky_vendor",
+    "task_10_rounding_false_alarm",
+    "task_7_retroactive_price",
+    "task_12_corrected_resubmission",
+    "task_4_duplicate_invoice",
+    "task_5_mixed_discrepancy",
+    "task_1_clean_match",
+    "task_2_partial_receipt",
+    "task_11_authorized_overship",
+    "task_h3_currency_silent_swap",
+    "task_h9_supplier_id_mismatch",
+    "task_h5_retroactive_amendment",
+    "task_h7_multi_party_pending",
+    "task_h8_rush_premium_authorized",
+    "task_h2_kickback_inflated_po",
+    "task_h10_cross_case_contradiction",
+    "task_h1_phantom_grn_period"
+  ],
+  "eval_tasks": [
+    "task_8_split_invoice_pattern",
+    "task_6_false_positive_duplicate",
+    "task_h6_returned_then_rebilled",
+    "task_h4_threshold_dance"
+  ],
+  "n_examples": 36,
+  "wall_clock_s": 2225.29
+}

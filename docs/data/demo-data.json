@@ -1,0 +1,70 @@
+{
+  "project": {
+    "name": "InvoiceGuard",
+    "tagline": "Trainable OpenEnv environment for invoice exception resolution",
+    "space_url": "https://huggingface.co/spaces/piyush-mk/invoice-guard",
+    "code_url": "https://huggingface.co/piyush-mk/invoiceguard-code",
+    "sft_v5c_url": "https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep",
+    "sft_v5d_best_url": "https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best"
+  },
+  "metrics": {
+    "local_baseline_score": 0.1374,
+    "sft_v5c_best_score": 0.7288,
+    "sft_v5d_best_score": 0.7037,
+    "sft_peak_success_rate": 0.75,
+    "sft_v5c_best_steps": 3.0,
+    "improvement_multiplier": 5.3
+  },
+  "demo_cases": [
+    {
+      "task_id": "task_8_split_invoice_pattern",
+      "title": "Split invoice policy violation",
+      "baseline_behavior": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "inspect_vendor_profile",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "summarize_findings",
+        "propose_exception_type",
+        "summarize_findings"
+      ],
+      "trained_behavior": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "compare_price",
+        "submit_final_resolution"
+      ],
+      "summary": "Baseline never submits. Trained model investigates key evidence, then submits a policy-aware escalation."
+    },
+    {
+      "task_id": "task_6_false_positive_duplicate",
+      "title": "False-positive duplicate trap",
+      "baseline_behavior": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "inspect_vendor_profile",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "summarize_findings",
+        "propose_exception_type",
+        "summarize_findings"
+      ],
+      "trained_behavior": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_vendor_profile",
+        "submit_final_resolution"
+      ],
+      "summary": "Baseline loops for 12 steps. Trained policy resolves in 3-5 steps with materially better grader outcomes."
+    }
+  ]
+}

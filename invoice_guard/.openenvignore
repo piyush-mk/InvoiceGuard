@@ -5,3 +5,6 @@ __pycache__/
 .venv/
 inference.py
 test_live_space.py
+eval_round2.py
+outputs/round2/
+training/

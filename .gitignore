@@ -4,3 +4,8 @@ __pycache__/
 .env
 references/
 invoice_guard/test_live_space.py
+invoice_guard/_*.py
+invoice_guard/outputs/round2/canonical__baseline_llama*.json
+invoice_guard/outputs/round2/hard__baseline_llama*.json
+invoice_guard/outputs/round2/canonical__baseline_qwen25_05b.json
+invoice_guard/outputs/round2/hard__baseline_qwen25_05b.json

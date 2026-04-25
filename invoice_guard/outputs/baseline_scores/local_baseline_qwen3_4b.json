@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "slice": "local_eval",
+  "model_tag": "local_qwen3_4b_instruct_2507_bf16",
+  "model_name": "Qwen/Qwen3-4B-Instruct-2507",
+  "inference_mode": "local (bf16, no adapter, same constraints as trained model)",
+  "constraints": {
+    "max_prompt_tokens": 2048,
+    "max_new_tokens": 384,
+    "temperature": 0.0001,
+    "precision": "bf16",
+    "lora": false
+  },
+  "description": "Base Qwen3-4B loaded locally with bf16 precision, evaluated through rollout.py on 4 holdout tasks. No fine-tuning, no LoRA adapter. Consistent result across all 6 independent training run initial evaluations (v5, v5b, v5c, v5d, GRPO v5, GRPO v6).",
+  "n_tasks": 4,
+  "summary": {
+    "avg_score": 0.1374,
+    "decision_correct": 0,
+    "decision_correct_rate": 0.0,
+    "success_rate": 0.0,
+    "avg_steps": 12.0,
+    "avg_cumulative_reward": -0.6126,
+    "component_avgs": {
+      "decision_score": 0.0,
+      "exception_type_score": 0.0,
+      "evidence_score": 0.0,
+      "investigation_score": 1.0,
+      "explanation_score": 0.0,
+      "efficiency_score": 0.0
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "task_8_split_invoice_pattern",
+      "decision": null,
+      "exception_type": null,
+      "steps": 12,
+      "grader_score": 0.137,
+      "submitted": false,
+      "behavior": "Generates valid investigation JSON actions (inspect_purchase_order, inspect_goods_receipt_note, compare_price, etc.) but never produces submit_final_resolution. Exhausts all 12 steps.",
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "inspect_vendor_profile",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "summarize_findings",
+        "propose_exception_type",
+        "summarize_findings"
+      ],
+      "components": {
+        "decision_score": 0.0,
+        "exception_type_score": 0.0,
+        "evidence_score": 0.96,
+        "investigation_score": 1.0,
+        "explanation_score": 0.0,
+        "efficiency_score": 0.0
+      }
+    },
+    {
+      "task_id": "task_6_false_positive_duplicate",
+      "decision": null,
+      "exception_type": null,
+      "steps": 12,
+      "grader_score": 0.137,
+      "submitted": false,
+      "behavior": "Investigates all available documents thoroughly but never reaches a conclusion. Repeats summarize_findings when stuck.",
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "inspect_vendor_profile",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "summarize_findings",
+        "propose_exception_type",
+        "summarize_findings"
+      ],
+      "components": {
+        "decision_score": 0.0,
+        "exception_type_score": 0.0,
+        "evidence_score": 0.96,
+        "investigation_score": 1.0,
+        "explanation_score": 0.0,
+        "efficiency_score": 0.0
+      }
+    },
+    {
+      "task_id": "task_h6_returned_then_rebilled",
+      "decision": null,
+      "exception_type": null,
+      "steps": 12,
+      "grader_score": 0.137,
+      "submitted": false,
+      "behavior": "Same pattern: thorough investigation, never submits resolution.",
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "inspect_vendor_profile",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "summarize_findings",
+        "propose_exception_type",
+        "summarize_findings"
+      ],
+      "components": {
+        "decision_score": 0.0,
+        "exception_type_score": 0.0,
+        "evidence_score": 0.96,
+        "investigation_score": 1.0,
+        "explanation_score": 0.0,
+        "efficiency_score": 0.0
+      }
+    },
+    {
+      "task_id": "task_h4_threshold_dance",
+      "decision": null,
+      "exception_type": null,
+      "steps": 12,
+      "grader_score": 0.137,
+      "submitted": false,
+      "behavior": "Same pattern: thorough investigation, never submits resolution.",
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "inspect_vendor_profile",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "summarize_findings",
+        "propose_exception_type",
+        "summarize_findings"
+      ],
+      "components": {
+        "decision_score": 0.0,
+        "exception_type_score": 0.0,
+        "evidence_score": 0.96,
+        "investigation_score": 1.0,
+        "explanation_score": 0.0,
+        "efficiency_score": 0.0
+      }
+    }
+  ],
+  "source_verification": {
+    "note": "This baseline is NOT from a separate run. It is constructed from the consistent initial eval results across all training runs. Every single run (SFT v5, v5b, v5c, v5d, GRPO v5, v6) produced identical initial eval: score=0.1374, success=0%, steps=12. The rollout diagnostic logs confirm the model generates valid investigation actions but never submit_final_resolution.",
+    "matching_runs": [
+      {"run": "SFT v5 (69ed24f6)", "initial_eval": 0.1374},
+      {"run": "SFT v5c (69ed29be)", "epoch_1_eval": 0.1678, "epoch_2_eval": 0.1245},
+      {"run": "SFT v5d (69ed2e78)", "epoch_1_eval": 0.1374},
+      {"run": "GRPO v5 (69ed24fa)", "initial_eval": 0.1374},
+      {"run": "GRPO v6 (69ed31a5)", "initial_eval": 0.1374}
+    ]
+  }
+}

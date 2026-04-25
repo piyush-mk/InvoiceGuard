@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InvoiceGuard Blog Story</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="nav-inner">
+        <a class="brand" href="./index.html">InvoiceGuard Demo</a>
+        <div class="nav-links">
+          <a href="index.html">Home Demo</a>
+          <a href="tasks.html">Tasks & Scoring</a>
+          <a href="blog.html">One-page Blog</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="hero">
+        <span class="badge">Narrative Writeup</span>
+        <h1>Blog in one page</h1>
+        <p>
+          This page renders the project <code>BLOG.md</code> directly so judges can read the full
+          training journey in one place.
+        </p>
+        <div class="demo-controls">
+          <a class="btn" href="./blog.md" target="_blank" rel="noreferrer">Open raw blog.md</a>
+          <a class="btn" data-space-link target="_blank" rel="noreferrer">Environment Space</a>
+          <a class="btn" data-code-link target="_blank" rel="noreferrer">Code Hub Repo</a>
+        </div>
+      </section>
+
+      <article id="blogContainer" class="blog-content">
+        <p>Loading blog...</p>
+      </article>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+  </html>

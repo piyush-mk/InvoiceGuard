@@ -20,6 +20,7 @@ Environment variables (mandatory):
 import asyncio
 import json
 import os
+import re
 import sys
 import time
 from typing import List, Optional
@@ -97,6 +98,18 @@ RESPONSE FORMAT:
 - Investigation example: {"action_type": "inspect_purchase_order"}
 - Resolution example: {"action_type": "submit_final_resolution", "final_decision": "approve_for_payment", "exception_type": "clean_match", "evidence_references": ["inspect_purchase_order", "compare_quantity"], "explanation": "All documents match within tolerance.", "confidence": 0.9}
 
+EXCEPTION TYPE OPTIONS:
+- clean_match: all documents match within tolerance
+- quantity_mismatch: billed quantity exceeds ordered quantity
+- price_mismatch: billed unit price exceeds PO-agreed price
+- total_amount_mismatch: invoice subtotal/total math is inconsistent
+- partial_receipt: invoice bills more than has been received
+- missing_receipt: no valid GRN supports the invoice/period
+- duplicate_invoice: same invoice or already-paid duplicate detected
+- tax_variance: tax amount differs from policy or expected value
+- policy_violation: policy requires hold/escalation despite matching docs
+- mixed_discrepancy: multiple material exception types are present
+
 RULES:
 - Pay close attention to POLICY findings -- they tell you when escalation is required.
 - When multiple issues exist, escalation takes priority over hold.
@@ -147,9 +160,50 @@ def build_observation_prompt(obs, is_first: bool = False) -> str:
 # -- LLM response parsing ------------------------------------------------
 
 
+_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+
+
+def strip_think_blocks(text: str) -> str:
+    """Remove Qwen3-style <think>...</think> reasoning blocks."""
+    return _THINK_RE.sub("", text).strip()
+
+
+def _extract_first_json_object(text: str) -> dict | None:
+    """Find the first balanced {...} in text and parse it."""
+    start = text.find("{")
+    if start == -1:
+        return None
+    depth = 0
+    in_str = False
+    escape = False
+    for i in range(start, len(text)):
+        c = text[i]
+        if escape:
+            escape = False
+            continue
+        if c == "\\":
+            escape = True
+            continue
+        if c == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    return json.loads(text[start : i + 1])
+                except json.JSONDecodeError:
+                    return None
+    return None
+
+
 def parse_llm_response(response_text: str) -> dict:
     """Extract a JSON object from the LLM response."""
-    text = response_text.strip()
+    text = strip_think_blocks(response_text).strip()
 
     if "```json" in text:
         text = text.split("```json")[1].split("```")[0].strip()
@@ -168,6 +222,10 @@ def parse_llm_response(response_text: str) -> dict:
                 return json.loads(line)
             except json.JSONDecodeError:
                 continue
+
+    obj = _extract_first_json_object(text)
+    if obj is not None:
+        return obj
 
     return {"action_type": "summarize_findings"}
 
