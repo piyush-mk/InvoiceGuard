@@ -251,7 +251,9 @@ Every item from the hackathon guidelines was explicitly verified.
 InvoiceGuard/                              # Git repo root
 |-- README.md                              # Public-facing docs
 |-- SUBMISSION.md                          # This file
-|-- .gitignore                             # Ignores .venv, .env, references/, outputs
+|-- .gitignore                             # Ignores .venv, .env, references/
+|-- notebooks/
+|   |-- InvoiceGuard_Round2_GRPO_Reproducibility.ipynb  # Training notebook
 |-- invoice_guard/                         # OpenEnv project root
 |   |-- openenv.yaml                       # Environment manifest
 |   |-- pyproject.toml                     # Dependencies (managed by uv)
@@ -262,24 +264,31 @@ InvoiceGuard/                              # Git repo root
 |   |-- .openenvignore                     # Files excluded from `openenv push`
 |   |-- models.py                          # Action/Observation/State + business entities
 |   |-- client.py                          # InvoiceGuardEnv EnvClient subclass
-|   |-- inference.py                       # Baseline LLM agent
-|   |-- outputs/                           # Sample inference outputs (git-kept)
+|   |-- inference.py                       # Baseline LLM agent + response parsing
+|   |-- eval_round2.py                     # Round 2 evaluation harness
+|   |-- outputs/
+|   |   |-- baseline_scores/               # Qwen3-4B, Qwen2.5-7B baseline JSONs
+|   |   |-- round2/                        # GPT model baseline JSONs
 |   |-- tasks/
-|   |   |-- __init__.py
-|   |   |-- definitions.py                 # All 20 task builders + dispatch
+|   |   |-- definitions.py                 # 12 canonical + 8 variant task builders
+|   |   |-- hard_definitions.py            # 10 hard-mode tasks (Round 2)
 |   |-- graders/
-|   |   |-- __init__.py
 |   |   |-- scoring.py                     # Deterministic 6-criterion grader
 |   |-- server/
-|   |   |-- __init__.py
 |   |   |-- app.py                         # FastAPI create_app() wire-up
 |   |   |-- invoice_guard_environment.py   # Core Environment implementation
+|   |-- training/
+|   |   |-- README.md                      # Training documentation
+|   |   |-- train_grpo.py                  # Trajectory GRPO script
+|   |   |-- train_sft.py                   # SFT training script
+|   |   |-- rollout.py                     # Agentic rollout helper
+|   |   |-- launch_hf_job.py               # HF Jobs launcher
+|   |   |-- eval_adapter.py               # LoRA adapter evaluation
+|   |   |-- merge_adapter.py              # Merge LoRA into base model
 |   |-- tests/
-|       |-- __init__.py
 |       |-- test_models.py                 # 14 model tests
 |       |-- test_grader.py                 # 10 grader tests
-|       |-- test_environment.py            # 19 environment tests (all 43 passing)
-|-- references/                            # Design docs (git-ignored)
+|       |-- test_environment.py            # 19 environment tests
 ```
 
 ---
@@ -301,71 +310,137 @@ InvoiceGuard/                              # Git repo root
 13. **Tasks 9--12** -- added 4 more false-positive trap tasks.
 14. **Multi-model benchmarks** -- ran gpt-4.1-mini, gpt-5.4-mini, gpt-4.1, gpt-5.4, Nemotron.
 15. **Spec alignment** -- switched to `HF_TOKEN` as primary key, default model `gpt-4.1-mini`.
-16. **Final deploy** -- merged to main, pushed to HF Spaces, verified with pre-validation.
+16. **Round 1 deploy** -- pushed to HF Spaces, verified with pre-validation.
+17. **Round 2: Hard tasks** -- added 10 hard-mode tasks targeting cross-case fraud, temporal policy, contradictory evidence, partial observability, multi-party approvals.
+18. **Round 2: Broader baselines** -- benchmarked gpt-4o, gpt-4.1-mini, gpt-5.1, Qwen3-4B, Qwen2.5-7B across canonical and hard slices.
+19. **Round 2: Training pipeline** -- built trajectory GRPO + SFT training scripts, rollout helper, HF Jobs launcher, adapter eval/merge tools.
+20. **Round 2: Qwen3 debugging** -- diagnosed and fixed thinking mode, token budget, and special token decoding issues.
+21. **Round 2: Reproducibility notebook** -- created Colab/Kaggle notebook for judges to reproduce training.
+22. **Round 2: HF Space update** -- pushed latest environment code (including hard tasks) to deployed Space.
 
 ---
 
 ## 8. What Judges Will See
 
-When the judges run the standard evaluation they will:
-
+### Environment (HF Space)
 1. Hit `POST /reset` on our live HF Space -- it returns a valid initial observation in under 1s.
 2. Hit `POST /step` with actions -- the environment advances correctly and returns shaped rewards.
-3. Access `grader_result` in the final observation (we populate it as a direct field so it survives the WebSocket protocol).
-4. See 12 canonical tasks all produce scores in [0, 1].
-5. See a 2-minute total wall-clock time on gpt-4.1-mini.
-6. See the mandatory `[START]` / `[STEP]` / `[END]` logs emitted to stdout.
+3. Access `grader_result` in the final observation (populated as a direct field so it survives the WebSocket protocol).
+4. See 22 tasks (12 canonical + 10 hard) all produce scores in [0, 1].
+5. See the mandatory `[START]` / `[STEP]` / `[END]` logs emitted to stdout.
 
-For an open-weight model like Nemotron 3 Super, they will see the environment correctly handles the provider (OpenRouter / HF router) and produces comparable scores, with the slow free-tier producing the only noticeable difference (longer per-task wall clock).
+### Training Evidence
+6. Baseline JSON scores for Qwen3-4B, Qwen2.5-7B, gpt-4o, gpt-4.1-mini, gpt-5.1 in `invoice_guard/outputs/`.
+7. Training code in `invoice_guard/training/` (GRPO + SFT scripts, rollout helper, adapter eval/merge).
+8. Reproducibility notebook at `notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb`.
+9. Trained LoRA adapters and training artifacts (metrics, curves, rollouts) on Hugging Face Hub.
 
 ---
 
 ## 9. How to Reproduce Our Results
 
+### Environment + Baselines
+
 ```bash
-# Clone
 git clone https://github.com/piyush-mk/InvoiceGuard.git
 cd InvoiceGuard/invoice_guard
-
-# Install deps
 uv sync
-
-# Set up .env
 cp .env.example .env
-# Edit .env: set HF_TOKEN to any OpenAI or HF key, MODEL_NAME to gpt-4.1-mini
+# Edit .env: set HF_TOKEN, MODEL_NAME to gpt-4.1-mini
 
-# Run inference locally
-uv run python inference.py
-
-# Run against live HF Space
-uv run python test_live_space.py
-
-# Run unit tests
-uv run pytest tests/ -v
-
-# Validate
-uv run openenv validate
+uv run python inference.py          # Run baseline inference
+uv run pytest tests/ -v             # Run unit tests
+uv run openenv validate             # Validate environment
 ```
+
+### Training (Round 2)
+
+Open `notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb` in Colab or Kaggle with a GPU accelerator, set `HF_TOKEN` in secrets, and run cells top-to-bottom. The notebook pulls all code from the Hub and pushes trained artifacts back -- no local clone needed.
 
 ---
 
-## 10. Future Work
+## 10. Round 2: Training an Open-Weight Agent
 
-Things we deliberately scoped out for the hackathon submission but would naturally extend:
+### Model selection
+
+We chose **Qwen/Qwen3-4B-Instruct-2507** as our trainable model. At 4B parameters it fits comfortably in 4-bit quantized LoRA on a single L40S/A100 GPU while still being capable enough to follow the multi-step investigation protocol.
+
+### Training approach
+
+The training pipeline has two stages:
+
+1. **SFT warm-start** -- supervised fine-tuning on expert traces generated from environment ground truth. Each task's optimal action sequence is known deterministically, so we can generate high-quality training data without any LLM inference. This teaches the model proper JSON action formatting for InvoiceGuard's 12 action types.
+
+2. **GRPO (Group Relative Policy Optimization)** -- trajectory-level reinforcement learning where the model interacts with the live InvoiceGuard environment. For each task, we generate multiple rollouts, compute the 6-criterion grader score as the reward, and optimize using group relative advantages. This stage teaches domain reasoning beyond what SFT can provide.
+
+### Key technical challenges
+
+**Qwen3 thinking mode:** Qwen3-4B-Instruct generates `<think>...</think>` blocks by default. These consumed most of the token budget and broke JSON action parsing. We solved this by:
+- Passing `enable_thinking=False` to the chat template
+- Decoding with `skip_special_tokens=False` to preserve tags for regex stripping
+- Explicitly removing `<think>` blocks and residual special tokens before parsing
+
+**Token budget:** The initial `max_new_tokens=96` was too small for structured JSON actions containing evidence references and explanations. Increasing to 384 resolved truncation issues.
+
+**Quantization trade-offs:** 4-bit quantization enables single-GPU training but introduces quality degradation. The SFT warm-start partially compensates by establishing strong action formatting priors before RL fine-tuning.
+
+### Baseline scores (Qwen3-4B, before training)
+
+| Task Slice | Avg Score | Decisions Correct |
+|-----------|-----------|-------------------|
+| Canonical (12 tasks) | 0.83 | 10/12 (83%) |
+| Hard (10 tasks) | 0.75 | 7/10 (70%) |
+
+### Trained model results
+
+*Results will be updated when the current training jobs complete.*
+
+### Training infrastructure
+
+| Component | Details |
+|-----------|---------|
+| Primary training | Hugging Face Jobs (L40S / A100 GPUs) |
+| Reproducibility | Colab/Kaggle notebook (`notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb`) |
+| Artifacts | LoRA adapters + training_artifacts/ pushed to Hugging Face Hub |
+| Monitoring | Trackio real-time metrics dashboard |
+| Training code | [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code) |
+
+### Broader baselines (Round 2)
+
+We benchmarked across both API and open-weight models to contextualize training improvement:
+
+| Model | Canonical Avg | Hard Avg |
+|-------|--------------|----------|
+| gpt-4o | 0.95 | 0.67 |
+| gpt-4.1-mini | 0.89 | 0.74 |
+| gpt-5.1 | 0.83 | 0.76 |
+| Qwen3-4B-Instruct-2507 | 0.83 | 0.75 |
+| Qwen2.5-7B-Instruct | 0.70 | 0.66 |
+
+The hard task slice is designed with a strong performance gap -- even gpt-4o drops to 0.67, confirming the tasks meaningfully challenge frontier models.
+
+---
+
+## 11. Future Work
+
+Things we deliberately scoped out but would naturally extend:
 
 - **Multi-currency** -- all tasks currently in USD; adding EUR / GBP / INR with FX conversion.
 - **Real OCR documents** -- generate PDF invoices and run through a document-parsing action.
-- **UI at `/web`** -- a simple HTML page showing task descriptions and live evaluation -- currently empty because create_app doesn't auto-serve one.
+- **Larger model training** -- scale to 7B+ models with multi-GPU training for stronger domain reasoning.
 - **Agent memory** -- per-vendor memory that persists across episodes for split-invoice detection.
-- **Learning from feedback** -- add RL fine-tuning loop on top of the dense reward signal.
+- **Curriculum learning** -- progressively increase task difficulty during RL training.
 
 ---
 
-## 11. License and Attribution
+## 12. License and Attribution
 
 Built for the OpenEnv Hackathon 2026. Uses:
 
 - OpenEnv (Meta / PyTorch) -- environment protocol and server harness
 - FastAPI / Pydantic -- HTTP and data modeling
 - OpenAI Python client -- LLM API calls (OpenAI-compatible, works with HF router and OpenRouter)
+- Hugging Face Transformers + PEFT + BitsAndBytes -- model loading, LoRA, quantization
+- Hugging Face Hub + Jobs -- artifact storage, cloud training
+- Trackio -- training metrics monitoring
 - python-dotenv -- .env loading

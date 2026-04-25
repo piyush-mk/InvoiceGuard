@@ -24,6 +24,7 @@ from inference import (  # type: ignore
     build_action,
     build_observation_prompt,
     parse_llm_response,
+    strip_think_blocks,
 )
 from models import TaskID  # type: ignore
 
@@ -58,11 +59,19 @@ class Trajectory:
 
 def _render_chat_prompt(tokenizer, messages: List[dict]) -> str:
     """Apply the model's chat template, leaving the assistant turn open."""
-    return tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-    )
+    try:
+        return tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+            enable_thinking=False,
+        )
+    except TypeError:
+        return tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
 
 
 @torch.no_grad()
@@ -74,7 +83,8 @@ def rollout_episode(
     *,
     temperature: float = 1.0,
     top_p: float = 0.95,
-    max_new_tokens: int = 160,
+    max_new_tokens: int = 384,
+    max_prompt_tokens: int = 2048,
     device: Optional[torch.device] = None,
 ) -> Trajectory:
     """
@@ -97,6 +107,8 @@ def rollout_episode(
             prompt_text,
             return_tensors="pt",
             add_special_tokens=False,
+            truncation=True,
+            max_length=max_prompt_tokens,
         ).to(device)
         prompt_ids = prompt_enc.input_ids[0]
 
@@ -109,7 +121,17 @@ def rollout_episode(
             pad_token_id=tokenizer.pad_token_id or tokenizer.eos_token_id,
         )
         completion_ids = gen[0, prompt_ids.shape[0]:]
-        completion_text = tokenizer.decode(completion_ids, skip_special_tokens=True)
+        # Decode WITHOUT skipping special tokens so <think>...</think> tags
+        # are preserved for our regex. Then strip think blocks, then remove
+        # remaining special tokens (EOS, chat markers, etc.).
+        raw_text = tokenizer.decode(completion_ids, skip_special_tokens=False)
+        cleaned = strip_think_blocks(raw_text)
+        for tok in tokenizer.all_special_tokens:
+            cleaned = cleaned.replace(tok, "")
+        completion_text = cleaned.strip()
+        del gen
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
         messages.append({"role": "assistant", "content": completion_text})
 

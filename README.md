@@ -198,44 +198,132 @@ cd invoice_guard
 openenv push --repo-id piyush-mk/invoice-guard
 ```
 
-## Baseline Scores (12 tasks)
+## Baseline Scores
 
-| Model | Avg Score | task_1 | task_2 | task_3 | task_4 | task_5 | task_6 | task_7 | task_8 | task_9 | task_10 | task_11 | task_12 |
-|-------|-----------|--------|--------|--------|--------|--------|--------|--------|--------|--------|---------|---------|---------|
-| **gpt-4.1-mini** | **0.87** | 0.95 | 0.78 | 0.75 | 0.95 | 0.78 | 0.95 | 0.75 | 0.75 | 0.95 | 0.95 | 0.98 | 0.95 |
-| **gpt-5.4-mini** | **0.87** | 0.98 | 0.95 | 0.73 | 0.98 | 0.75 | 0.98 | 0.75 | 0.50 | 0.95 | 0.98 | 0.98 | 0.95 |
-| **gpt-4.1** | **0.79** | 0.95 | 0.75 | 0.75 | 0.47 | 0.78 | 0.95 | 0.78 | 0.75 | 0.40 | 0.95 | 0.95 | 0.95 |
-| **gpt-5.4** | **0.78** | 0.95 | 0.75 | 0.70 | 0.47 | 0.75 | 0.95 | 0.78 | 0.75 | 0.40 | 0.95 | 0.95 | 0.95 |
+### Canonical Tasks (12 tasks)
 
-Key observations:
-- **Task 9** (clean invoice from risky vendor) is a strong false-positive trap: both gpt-4.1 and gpt-5.4 escalated instead of approving, scoring only 0.40.
-- **Task 8** (split invoice pattern) tripped gpt-5.4-mini, which rejected instead of escalating (0.50).
-- **Task 4** (duplicate invoice) tripped both full-size models, which escalated instead of rejecting (0.47).
-- Mini models consistently outperform their larger counterparts on this benchmark, suggesting the tasks reward focused analysis over verbose reasoning.
+| Model | Type | Avg Score | Decision Correct Rate |
+|-------|------|-----------|----------------------|
+| **gpt-4o** | API | **0.95** | 100% |
+| **gpt-4.1-mini** | API | **0.89** | 92% |
+| **gpt-5.1** | API | **0.83** | 83% |
+| **Qwen3-4B-Instruct-2507** | Open-weight | **0.83** | 83% |
+| **Qwen2.5-7B-Instruct** | Open-weight | **0.70** | 58% |
+
+### Hard Tasks (10 tasks -- Round 2)
+
+| Model | Type | Avg Score | Decision Correct Rate |
+|-------|------|-----------|----------------------|
+| **gpt-5.1** | API | **0.76** | 70% |
+| **Qwen3-4B-Instruct-2507** | Open-weight | **0.75** | 70% |
+| **gpt-4.1-mini** | API | **0.74** | 70% |
+| **Qwen2.5-7B-Instruct** | Open-weight | **0.66** | 50% |
+| **gpt-4o** | API | **0.67** | 60% |
+
+The hard tasks are designed with a strong performance gap (~40-55% on the worst tasks). Even gpt-4o drops to 0.67 on the hard slice, confirming the tasks meaningfully challenge frontier models.
+
+Full per-task breakdowns are in `invoice_guard/outputs/baseline_scores/` and `invoice_guard/outputs/round2/`.
+
+---
+
+## Round 2: Training an Open-Weight Agent
+
+### Approach
+
+We fine-tune **Qwen/Qwen3-4B-Instruct-2507** using 4-bit quantized LoRA on the InvoiceGuard environment. The training pipeline has two stages:
+
+1. **SFT Warm-Start** -- supervised fine-tuning on expert traces generated from environment ground truth. Teaches the model proper JSON action formatting for the InvoiceGuard action space.
+2. **GRPO (Group Relative Policy Optimization)** -- trajectory-level RL where the model interacts with the live environment, generates rollouts, and is optimized using the grader's reward signal.
+
+### Key Technical Challenges Solved
+
+- **Qwen3 Thinking Mode:** Qwen3's default `<think>...</think>` blocks consumed the token budget and broke JSON action parsing. Fixed by disabling thinking mode via `enable_thinking=False` in the chat template and stripping residual thinking blocks during decoding.
+- **Token Budget:** Initial `max_new_tokens=96` was too small for structured JSON actions with explanations. Increased to 384.
+- **Special Token Handling:** `skip_special_tokens=True` was stripping `<think>` tags before our regex could remove thinking content. Fixed by decoding with `skip_special_tokens=False`, then explicitly stripping thinking blocks and special tokens.
+
+### Baseline (Before Training)
+
+| Slice | Avg Score | Decision Correct |
+|-------|-----------|-----------------|
+| Canonical (12 tasks) | 0.83 | 10/12 |
+| Hard (10 tasks) | 0.75 | 7/10 |
+
+### Trained Model Results
+
+*Results will be updated when the current v3 training jobs complete.*
+
+### Training Infrastructure
+
+- **Primary:** Hugging Face Jobs (L40S / A100 GPUs)
+- **Reproducibility:** Colab/Kaggle notebook at `notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb`
+- **Artifacts:** LoRA adapters, metrics, reward curves, and rollout samples pushed to Hugging Face Hub
+
+See [`invoice_guard/training/README.md`](invoice_guard/training/README.md) for full training documentation.
+
+### Hub Artifacts
+
+| Artifact | Hub Location |
+|----------|-------------|
+| Training code | [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code) |
+| Deployed environment | [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard) |
+
+---
+
+## Reproducibility
+
+### Reproduce Baselines
+
+```bash
+cd invoice_guard
+uv sync
+cp .env.example .env
+# Edit .env with your API key
+uv run python inference.py
+```
+
+### Reproduce Training
+
+Open `notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb` in Colab or Kaggle, set `HF_TOKEN` in secrets, and run cells top-to-bottom. The notebook pulls all code from the Hub and pushes trained artifacts back -- no local clone needed.
 
 ## Project Structure
 
 ```
 InvoiceGuard/
-|---- invoice_guard/               # OpenEnv project root
-|   |---- openenv.yaml             # OpenEnv manifest
-|   |---- pyproject.toml           # Dependencies (managed by uv)
-|   |---- uv.lock                  # Locked dependencies
-|   |---- Dockerfile               # Container image definition
-|   |---- models.py                # All data models (Action, Observation, State, entities)
-|   |---- client.py                # InvoiceGuardEnv client (EnvClient subclass)
-|   |---- inference.py             # Baseline LLM agent script
-|   |---- .env.example             # Environment variable template
-|   |---- outputs/                 # Sample inference outputs
+|---- README.md
+|---- SUBMISSION.md
+|---- .gitignore
+|---- notebooks/
+|   |---- InvoiceGuard_Round2_GRPO_Reproducibility.ipynb
+|---- invoice_guard/                # OpenEnv project root
+|   |---- openenv.yaml              # OpenEnv manifest
+|   |---- pyproject.toml            # Dependencies (managed by uv)
+|   |---- uv.lock                   # Locked dependencies
+|   |---- Dockerfile                # Container image definition
+|   |---- models.py                 # All data models (Action, Observation, State, entities)
+|   |---- client.py                 # InvoiceGuardEnv client (EnvClient subclass)
+|   |---- inference.py              # Baseline LLM agent + response parsing
+|   |---- eval_round2.py            # Round 2 evaluation harness
+|   |---- .env.example              # Environment variable template
+|   |---- outputs/
+|   |   |---- baseline_scores/      # Qwen3-4B, Qwen2.5-7B baseline JSONs
+|   |   |---- round2/               # GPT baseline JSONs
 |   |---- tasks/
-|   |   |---- definitions.py       # Synthetic case templates and ground truth
+|   |   |---- definitions.py        # 12 canonical + 8 variant task builders
+|   |   |---- hard_definitions.py   # 10 hard-mode tasks (Round 2)
 |   |---- graders/
-|   |   |---- scoring.py           # Deterministic multi-criteria grader
+|   |   |---- scoring.py            # Deterministic 6-criterion grader
 |   |---- server/
-|   |   |---- app.py               # FastAPI application (HTTP + WebSocket)
-|   |   |---- invoice_guard_environment.py  # Core Environment implementation
-|   |---- tests/                   # Unit tests
-|---- references/                  # Design docs and guidelines (git-ignored)
+|   |   |---- app.py                # FastAPI application (HTTP + WebSocket)
+|   |   |---- invoice_guard_environment.py
+|   |---- training/
+|   |   |---- README.md             # Training documentation
+|   |   |---- train_grpo.py         # Trajectory GRPO training script
+|   |   |---- train_sft.py          # SFT training script
+|   |   |---- rollout.py            # Agentic rollout helper
+|   |   |---- launch_hf_job.py      # HF Jobs launcher
+|   |   |---- eval_adapter.py       # LoRA adapter evaluation
+|   |   |---- merge_adapter.py      # Merge LoRA into base model
+|   |---- tests/                    # Unit tests
 ```
 
 ## License

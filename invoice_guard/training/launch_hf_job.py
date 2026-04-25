@@ -16,7 +16,7 @@ Usage:
         --hf-username <your-username> \
         --flavor a10g-large \
         --timeout 4h \
-        --base-model Qwen/Qwen2.5-7B-Instruct \
+        --base-model Qwen/Qwen3-4B-Instruct-2507 \
         --num-iterations 3 --group-size 4
 
 Requires:
@@ -36,18 +36,56 @@ REPO_DIR = Path(__file__).resolve().parent.parent  # invoice_guard/
 TRAIN_SCRIPT = Path(__file__).resolve().parent / "train_grpo.py"
 
 
-def upload_code(hf_username: str, code_repo_name: str) -> str:
+def _resolve_hf_token() -> str:
+    token = os.environ.get("HF_TOKEN") or os.environ.get("API_TOKEN_HF")
+    if not token:
+        raise RuntimeError(
+            "Missing HF token. Set HF_TOKEN or API_TOKEN_HF before launching a paid job."
+        )
+    return token
+
+
+def _preflight_hub_auth(hf_username: str, hub_model_id: str, token: str) -> None:
+    from huggingface_hub import HfApi, create_repo
+
+    api = HfApi(token=token)
+    who = api.whoami(token=token)
+    actual_user = who.get("name") or who.get("fullname") or "<unknown>"
+    if actual_user != hf_username:
+        print(
+            f"[preflight] token owner is {actual_user!r}, target namespace is {hf_username!r}",
+            flush=True,
+        )
+    repo_id = f"{hf_username}/{hub_model_id}"
+    create_repo(
+        repo_id=repo_id,
+        repo_type="model",
+        exist_ok=True,
+        private=False,
+        token=token,
+    )
+    print(f"[preflight] HF auth ok; output repo writable: {repo_id}", flush=True)
+
+
+def upload_code(hf_username: str, code_repo_name: str, token: str) -> str:
     from huggingface_hub import HfApi, create_repo
 
     repo_id = f"{hf_username}/{code_repo_name}"
-    create_repo(repo_id=repo_id, repo_type="model", exist_ok=True, private=False)
+    create_repo(
+        repo_id=repo_id,
+        repo_type="model",
+        exist_ok=True,
+        private=False,
+        token=token,
+    )
 
-    api = HfApi()
+    api = HfApi(token=token)
     print(f"[upload] {REPO_DIR} -> {repo_id}", flush=True)
     api.upload_folder(
         folder_path=str(REPO_DIR),
         repo_id=repo_id,
         repo_type="model",
+        token=token,
         ignore_patterns=[
             "outputs/**",
             ".venv/**",
@@ -62,7 +100,7 @@ def upload_code(hf_username: str, code_repo_name: str) -> str:
     return repo_id
 
 
-def submit_job(args: argparse.Namespace, code_repo_id: str) -> None:
+def submit_job(args: argparse.Namespace, code_repo_id: str, token: str) -> None:
     from huggingface_hub import run_uv_job
 
     # `run_uv_job`'s Python API expects a local path or URL. Passing the script
@@ -72,24 +110,38 @@ def submit_job(args: argparse.Namespace, code_repo_id: str) -> None:
         f"https://huggingface.co/{code_repo_id}/resolve/main/training/train_grpo.py"
     )
 
+    env = {
+        "INVOICEGUARD_CODE_REPO": code_repo_id,
+        "HF_USERNAME": args.hf_username,
+        "HUB_MODEL_ID": args.hub_model_id,
+        "BASE_MODEL": args.base_model,
+        "TRACKIO_PROJECT": args.trackio_project,
+        "TRACKIO_RUN_NAME": args.run_name,
+        "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+        "TOKENIZERS_PARALLELISM": "false",
+    }
+    if args.format_warmup_model_id:
+        env["FORMAT_WARMUP_MODEL_ID"] = args.format_warmup_model_id
+
+    script_args = [
+        "--num-iterations", str(args.num_iterations),
+        "--group-size", str(args.group_size),
+        "--eval-holdout-canonical", str(args.eval_holdout_canonical),
+        "--eval-holdout-hard", str(args.eval_holdout_hard),
+        "--max-new-tokens", str(args.max_new_tokens),
+        "--max-prompt-tokens", str(args.max_prompt_tokens),
+        "--format-warmup-tasks", str(args.format_warmup_tasks),
+    ]
+    if args.max_train_tasks:
+        script_args.extend(["--max-train-tasks", str(args.max_train_tasks)])
+
     job = run_uv_job(
         script=script_url,
         flavor=args.flavor,
         timeout=args.timeout,
-        secrets={"HF_TOKEN": "$HF_TOKEN"},
-        env={
-            "INVOICEGUARD_CODE_REPO": code_repo_id,
-            "HF_USERNAME": args.hf_username,
-            "HUB_MODEL_ID": args.hub_model_id,
-            "BASE_MODEL": args.base_model,
-            "TRACKIO_PROJECT": args.trackio_project,
-            "TRACKIO_RUN_NAME": args.run_name,
-        },
-        script_args=[
-            "--num-iterations", str(args.num_iterations),
-            "--group-size", str(args.group_size),
-        ] + (["--max-train-tasks", str(args.max_train_tasks)]
-             if args.max_train_tasks else []),
+        secrets={"HF_TOKEN": token},
+        env=env,
+        script_args=script_args,
     )
     print("\n[submit] job submitted!", flush=True)
     print(f"  job id : {getattr(job, 'id', job)}", flush=True)
@@ -108,24 +160,38 @@ def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--hf-username", required=True)
     p.add_argument("--code-repo-name", default="invoiceguard-code")
-    p.add_argument("--hub-model-id", default="invoiceguard-qwen25-7b-grpo")
-    p.add_argument("--base-model", default="Qwen/Qwen2.5-7B-Instruct")
+    p.add_argument("--hub-model-id", default="invoiceguard-qwen3-4b-grpo")
+    p.add_argument("--base-model", default="Qwen/Qwen3-4B-Instruct-2507")
     p.add_argument("--flavor", default="a10g-large")
     p.add_argument("--timeout", default="4h")
     p.add_argument("--num-iterations", type=int, default=3)
     p.add_argument("--group-size", type=int, default=4)
     p.add_argument("--max-train-tasks", type=int, default=None)
+    p.add_argument("--eval-holdout-canonical", type=int, default=3)
+    p.add_argument("--eval-holdout-hard", type=int, default=3)
+    p.add_argument("--max-new-tokens", type=int, default=384)
+    p.add_argument("--max-prompt-tokens", type=int, default=2048)
+    p.add_argument("--format-warmup-tasks", type=int, default=8)
+    p.add_argument("--format-warmup-model-id", default=None)
     p.add_argument("--trackio-project", default="invoiceguard-round2")
-    p.add_argument("--run-name", default="qwen25-7b-grpo")
+    p.add_argument("--run-name", default="qwen3-4b-grpo")
     p.add_argument("--skip-upload", action="store_true",
                    help="Reuse the existing code repo (no re-upload).")
+    p.add_argument("--preflight-only", action="store_true",
+                   help="Validate HF auth/repo permissions and exit before uploading/submitting.")
     args = p.parse_args()
+
+    token = _resolve_hf_token()
+    _preflight_hub_auth(args.hf_username, args.hub_model_id, token)
+    if args.preflight_only:
+        print("[preflight] done; no job submitted", flush=True)
+        return
 
     code_repo_id = f"{args.hf_username}/{args.code_repo_name}"
     if not args.skip_upload:
-        code_repo_id = upload_code(args.hf_username, args.code_repo_name)
+        code_repo_id = upload_code(args.hf_username, args.code_repo_name, token)
 
-    submit_job(args, code_repo_id)
+    submit_job(args, code_repo_id, token)
 
 
 if __name__ == "__main__":

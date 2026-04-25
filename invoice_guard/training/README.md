@@ -1,6 +1,6 @@
 # InvoiceGuard Round 2 — Trajectory-level GRPO
 
-This package trains a small instruction-tuned LM (default `Qwen/Qwen2.5-3B-Instruct`)
+This package trains a small instruction-tuned LM (default `Qwen/Qwen3-4B-Instruct-2507`)
 on the InvoiceGuard OpenEnv with a hand-written multi-step GRPO loop:
 
 - Sample **G trajectories** per training task with the current (stochastic) policy.
@@ -41,7 +41,7 @@ benchmark for the README plots is produced separately by
 ```powershell
 cd invoice_guard
 ..\.venv\Scripts\python -m training.train_grpo `
-    --model-name Qwen/Qwen2.5-0.5B-Instruct `
+    --model-name Qwen/Qwen3-4B-Instruct-2507 `
     --num-iterations 1 --group-size 2 --max-train-tasks 2 --no-push
 ```
 
@@ -60,7 +60,7 @@ cd invoice_guard
     --hf-username <your-username> `
     --flavor a10g-large `
     --timeout 4h `
-    --base-model Qwen/Qwen2.5-3B-Instruct `
+    --base-model Qwen/Qwen3-4B-Instruct-2507 `
     --num-iterations 3 --group-size 4
 ```
 
@@ -68,25 +68,25 @@ What happens:
 
 1. The launcher uploads `invoice_guard/` to `{your-username}/invoiceguard-code`
    (creates the repo if needed; ignores `outputs/`, `.venv/`, `.env`).
-2. `train_grpo.py` is submitted **inline** to HF Jobs.
+2. `train_grpo.py` is submitted to HF Jobs from the uploaded Hub script URL.
 3. Inside the container the script `snapshot_download`s the code repo and adds
    it to `sys.path`, then runs the GRPO loop.
 4. Trackio dashboard appears at `https://huggingface.co/spaces/<user>/trackio`
-   (project `invoiceguard-round2`, run `qwen3b-grpo`).
+   (project `invoiceguard-round2`, run `qwen3-4b-grpo`).
 5. On completion the LoRA adapter is pushed to
-   `{your-username}/invoiceguard-qwen3b-grpo`.
+   `{your-username}/invoiceguard-qwen3-4b-grpo`.
 
 ## After training
 
 Run the Round 2 benchmark against the trained model:
 
 ```powershell
-$env:API_BASE_URL = "<endpoint serving your-username/invoiceguard-qwen3b-grpo>"
-$env:MODEL_NAME = "<your-username>/invoiceguard-qwen3b-grpo"
-..\.venv\Scripts\python eval_round2.py --slice all --model-tag trained_qwen3b_grpo
+$env:API_BASE_URL = "<endpoint serving your-username/invoiceguard-qwen3-4b-grpo>"
+$env:MODEL_NAME = "<your-username>/invoiceguard-qwen3-4b-grpo"
+..\.venv\Scripts\python eval_round2.py --slice all --model-tag trained_qwen3_4b_grpo
 ..\.venv\Scripts\python eval_round2.py --compare `
-    outputs\round2\hard__baseline_qwen3b.json `
-    outputs\round2\hard__trained_qwen3b_grpo.json
+    outputs\baseline_scores\hard__clean_qwen3_4b.json `
+    outputs\round2\hard__trained_qwen3_4b_grpo.json
 ```
 
 The compare output is what the README before/after plot is built from in
@@ -96,6 +96,6 @@ Stage H.
 
 | Setting | Approx | Notes |
 | --- | --- | --- |
-| `a10g-large` × 3-4h | $15-20 | Default — Qwen2.5-3B-Instruct, 3 iter × 16 tasks × G=4 = 192 trajectories per epoch. |
-| `a10g-small` × 4h | $14 | If you drop to Qwen2.5-1.5B-Instruct. |
+| `l40s` / `a100-large` × 2-4h | varies | Default — Qwen3-4B-Instruct, 3 iter × 16 tasks × G=4 = 192 trajectories per epoch. |
+| `a10g-large` × 3-5h | lower cost | May require shorter prompts/generation and 4-bit LoRA. |
 | Smoke test (CPU) | $0 | Uses in-tree env, no Hub push. |

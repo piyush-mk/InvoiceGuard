@@ -20,6 +20,7 @@ Environment variables (mandatory):
 import asyncio
 import json
 import os
+import re
 import sys
 import time
 from typing import List, Optional
@@ -159,9 +160,17 @@ def build_observation_prompt(obs, is_first: bool = False) -> str:
 # -- LLM response parsing ------------------------------------------------
 
 
+_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+
+
+def strip_think_blocks(text: str) -> str:
+    """Remove Qwen3-style <think>...</think> reasoning blocks."""
+    return _THINK_RE.sub("", text).strip()
+
+
 def parse_llm_response(response_text: str) -> dict:
     """Extract a JSON object from the LLM response."""
-    text = response_text.strip()
+    text = strip_think_blocks(response_text).strip()
 
     if "```json" in text:
         text = text.split("```json")[1].split("```")[0].strip()

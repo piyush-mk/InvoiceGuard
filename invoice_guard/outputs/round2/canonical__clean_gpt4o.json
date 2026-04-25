@@ -1,0 +1,1283 @@
+{
+  "schema_version": 1,
+  "slice": "canonical",
+  "model_tag": "clean_gpt4o",
+  "model_name": "gpt-4o",
+  "api_base_url": "https://api.openai.com/v1",
+  "started_at": "2026-04-25T10:08:59.165191+00:00",
+  "wall_clock_s": 106.63,
+  "n_tasks": 12,
+  "summary": {
+    "avg_score": 0.9475,
+    "decision_correct": 12,
+    "decision_correct_rate": 1.0,
+    "component_avgs": {
+      "decision_score": 1.0,
+      "exception_type_score": 1.0,
+      "evidence_score": 0.9111,
+      "investigation_score": 0.9833,
+      "explanation_score": 0.9,
+      "efficiency_score": 0.725
+    },
+    "shortcut_episodes": 0
+  },
+  "tasks": [
+    {
+      "task_id": "task_1_clean_match",
+      "decision": "approve_for_payment",
+      "exception_type": "clean_match",
+      "steps": 8,
+      "grader_score": 0.93,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 1.0,
+        "investigation_score": 1.0,
+        "explanation_score": 0.8,
+        "efficiency_score": 0.5
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "inspect_policy_rules",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "compare_totals",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 8,
+          "action": "submit_final_resolution",
+          "base": 0.93,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 0.98,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 8.83
+    },
+    {
+      "task_id": "task_2_partial_receipt",
+      "decision": "place_on_hold",
+      "exception_type": "partial_receipt",
+      "steps": 7,
+      "grader_score": 0.96,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 1.0,
+        "investigation_score": 1.0,
+        "explanation_score": 0.8,
+        "efficiency_score": 0.8
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "inspect_policy_rules",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "submit_final_resolution",
+          "base": 0.96,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 1.01,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 6.78
+    },
+    {
+      "task_id": "task_3_price_variance",
+      "decision": "escalate_for_supervisor_review",
+      "exception_type": "price_mismatch",
+      "steps": 6,
+      "grader_score": 0.98,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 1.0,
+        "investigation_score": 1.0,
+        "explanation_score": 1.0,
+        "efficiency_score": 0.8
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_price",
+        "inspect_policy_rules",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_price",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "submit_final_resolution",
+          "base": 0.98,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 1.03,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 5.93
+    },
+    {
+      "task_id": "task_4_duplicate_invoice",
+      "decision": "reject_invoice",
+      "exception_type": "duplicate_invoice",
+      "steps": 9,
+      "grader_score": 0.865,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 0.5,
+        "investigation_score": 0.8,
+        "explanation_score": 0.8,
+        "efficiency_score": 0.8
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules",
+        "duplicate_check"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "compare_totals",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 8,
+          "action": "check_for_duplicate_invoice",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 9,
+          "action": "submit_final_resolution",
+          "base": 0.865,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 0.915,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 8.65
+    },
+    {
+      "task_id": "task_5_mixed_discrepancy",
+      "decision": "escalate_for_supervisor_review",
+      "exception_type": "mixed_discrepancy",
+      "steps": 7,
+      "grader_score": 0.98,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 1.0,
+        "investigation_score": 1.0,
+        "explanation_score": 1.0,
+        "efficiency_score": 0.8
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "inspect_policy_rules",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "submit_final_resolution",
+          "base": 0.98,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 1.03,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 6.66
+    },
+    {
+      "task_id": "task_6_false_positive_duplicate",
+      "decision": "approve_for_payment",
+      "exception_type": "clean_match",
+      "steps": 10,
+      "grader_score": 0.93,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 1.0,
+        "investigation_score": 1.0,
+        "explanation_score": 0.8,
+        "efficiency_score": 0.5
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules",
+        "duplicate_check",
+        "vendor_profile"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "inspect_vendor_profile",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "compare_totals",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 8,
+          "action": "check_for_duplicate_invoice",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 9,
+          "action": "inspect_vendor_profile",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 10,
+          "action": "submit_final_resolution",
+          "base": 0.93,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 0.98,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 8.38
+    },
+    {
+      "task_id": "task_7_retroactive_price",
+      "decision": "escalate_for_supervisor_review",
+      "exception_type": "price_mismatch",
+      "steps": 7,
+      "grader_score": 0.95,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 0.8,
+        "investigation_score": 1.0,
+        "explanation_score": 1.0,
+        "efficiency_score": 0.8
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "inspect_policy_rules",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "submit_final_resolution",
+          "base": 0.95,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 1.0,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 6.87
+    },
+    {
+      "task_id": "task_8_split_invoice_pattern",
+      "decision": "escalate_for_supervisor_review",
+      "exception_type": "policy_violation",
+      "steps": 9,
+      "grader_score": 0.95,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 0.8,
+        "investigation_score": 1.0,
+        "explanation_score": 1.0,
+        "efficiency_score": 0.8
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules",
+        "duplicate_check"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "compare_totals",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 8,
+          "action": "check_for_duplicate_invoice",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 9,
+          "action": "submit_final_resolution",
+          "base": 0.95,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 1.0,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 9.51
+    },
+    {
+      "task_id": "task_9_clean_from_risky_vendor",
+      "decision": "approve_for_payment",
+      "exception_type": "clean_match",
+      "steps": 9,
+      "grader_score": 0.935,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 0.8333,
+        "investigation_score": 1.0,
+        "explanation_score": 0.8,
+        "efficiency_score": 0.8
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules",
+        "duplicate_check"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "compare_totals",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 8,
+          "action": "check_for_duplicate_invoice",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 9,
+          "action": "submit_final_resolution",
+          "base": 0.935,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 0.985,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 8.19
+    },
+    {
+      "task_id": "task_10_rounding_false_alarm",
+      "decision": "approve_for_payment",
+      "exception_type": "clean_match",
+      "steps": 10,
+      "grader_score": 0.93,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 1.0,
+        "investigation_score": 1.0,
+        "explanation_score": 0.8,
+        "efficiency_score": 0.5
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules",
+        "duplicate_check",
+        "vendor_profile"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "inspect_vendor_profile",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "compare_totals",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 8,
+          "action": "check_for_duplicate_invoice",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 9,
+          "action": "inspect_vendor_profile",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 10,
+          "action": "submit_final_resolution",
+          "base": 0.93,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 0.98,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 13.88
+    },
+    {
+      "task_id": "task_11_authorized_overship",
+      "decision": "approve_for_payment",
+      "exception_type": "clean_match",
+      "steps": 9,
+      "grader_score": 0.98,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 1.0,
+        "investigation_score": 1.0,
+        "explanation_score": 1.0,
+        "efficiency_score": 0.8
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules",
+        "duplicate_check"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "inspect_policy_rules",
+        "compare_price",
+        "compare_totals",
+        "check_for_duplicate_invoice",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "compare_price",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "compare_totals",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 8,
+          "action": "check_for_duplicate_invoice",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 9,
+          "action": "submit_final_resolution",
+          "base": 0.98,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 1.03,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 10.73
+    },
+    {
+      "task_id": "task_12_corrected_resubmission",
+      "decision": "approve_for_payment",
+      "exception_type": "clean_match",
+      "steps": 9,
+      "grader_score": 0.98,
+      "components": {
+        "decision_score": 1.0,
+        "exception_type_score": 1.0,
+        "evidence_score": 1.0,
+        "investigation_score": 1.0,
+        "explanation_score": 1.0,
+        "efficiency_score": 0.8
+      },
+      "shortcut_penalty_applied": false,
+      "documents_revealed": [
+        "purchase_order",
+        "goods_receipt_note",
+        "invoice_line_items",
+        "policy_rules",
+        "duplicate_check"
+      ],
+      "actions_taken": [
+        "inspect_purchase_order",
+        "inspect_goods_receipt_note",
+        "inspect_invoice_line_items",
+        "compare_quantity",
+        "compare_price",
+        "compare_totals",
+        "inspect_policy_rules",
+        "check_for_duplicate_invoice",
+        "submit_final_resolution"
+      ],
+      "reward_components": [
+        {
+          "step": 1,
+          "action": "inspect_purchase_order",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 2,
+          "action": "inspect_goods_receipt_note",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 3,
+          "action": "inspect_invoice_line_items",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 4,
+          "action": "compare_quantity",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 5,
+          "action": "compare_price",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 6,
+          "action": "compare_totals",
+          "base": 0.03,
+          "penalties": {},
+          "total": 0.03,
+          "reason": "step"
+        },
+        {
+          "step": 7,
+          "action": "inspect_policy_rules",
+          "base": 0.05,
+          "penalties": {},
+          "total": 0.05,
+          "reason": "step"
+        },
+        {
+          "step": 8,
+          "action": "check_for_duplicate_invoice",
+          "base": 0.08,
+          "penalties": {},
+          "total": 0.08,
+          "reason": "step"
+        },
+        {
+          "step": 9,
+          "action": "submit_final_resolution",
+          "base": 0.98,
+          "penalties": {
+            "confidence": 0.05
+          },
+          "total": 1.03,
+          "reason": "terminal_submit"
+        }
+      ],
+      "wall_clock_s": 12.22
+    }
+  ]
+}
