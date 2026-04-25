@@ -133,6 +133,12 @@ def rollout_episode(
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
+        if traj.n_steps < 2:
+            print(f"[rollout-diag] task={task_id.value} step={traj.n_steps} "
+                  f"gen_tokens={len(completion_ids)} "
+                  f"raw_text={repr(raw_text[:300])} "
+                  f"completion_text={repr(completion_text[:200])}", flush=True)
+
         messages.append({"role": "assistant", "content": completion_text})
 
         params = parse_llm_response(completion_text)

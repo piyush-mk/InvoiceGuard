@@ -92,6 +92,8 @@ class SftConfig:
     eval_holdout_canonical: int = 3
     eval_holdout_hard: int = 3
     eval_every_epoch: bool = True
+    submit_only: bool = False
+    min_investigation_steps: int = 0
 
     lr: float = 5e-5
     grad_clip: float = 1.0
@@ -128,35 +130,35 @@ def split_tasks(cfg: SftConfig) -> tuple[list[TaskID], list[TaskID]]:
     return train_tasks, eval_tasks
 
 
-def _expert_actions(env: InvoiceGuardEnvironment, task_id: TaskID) -> list[dict]:
+_ALL_INVESTIGATION_ACTIONS = [
+    {"action_type": "inspect_purchase_order"},
+    {"action_type": "inspect_goods_receipt_note"},
+    {"action_type": "inspect_invoice_line_items"},
+    {"action_type": "inspect_vendor_profile"},
+    {"action_type": "compare_quantity"},
+    {"action_type": "compare_price"},
+    {"action_type": "compare_totals"},
+    {"action_type": "check_for_duplicate_invoice"},
+    {"action_type": "inspect_policy_rules"},
+]
+
+
+def _expert_actions(
+    env: InvoiceGuardEnvironment,
+    task_id: TaskID,
+    max_investigation_steps: int = 9,
+) -> list[dict]:
     case = getattr(env, "_case", None)
     if case is None:
         env.reset(task_id=task_id.value)
         case = getattr(env, "_case", None)
     assert case is not None
     gt = case.ground_truth
-    evidence = list(dict.fromkeys([
-        "inspect_purchase_order",
-        "inspect_goods_receipt_note",
-        "inspect_invoice_line_items",
-        "inspect_vendor_profile",
-        "compare_quantity",
-        "compare_price",
-        "compare_totals",
-        "check_for_duplicate_invoice",
-        "inspect_policy_rules",
-        *gt.acceptable_evidence,
-    ]))
+    investigation = _ALL_INVESTIGATION_ACTIONS[:max_investigation_steps]
+    used_names = [a["action_type"] for a in investigation]
+    evidence = list(dict.fromkeys([*used_names, *gt.acceptable_evidence]))
     return [
-        {"action_type": "inspect_purchase_order"},
-        {"action_type": "inspect_goods_receipt_note"},
-        {"action_type": "inspect_invoice_line_items"},
-        {"action_type": "inspect_vendor_profile"},
-        {"action_type": "compare_quantity"},
-        {"action_type": "compare_price"},
-        {"action_type": "compare_totals"},
-        {"action_type": "check_for_duplicate_invoice"},
-        {"action_type": "inspect_policy_rules"},
+        *investigation,
         {
             "action_type": "submit_final_resolution",
             "final_decision": gt.correct_decision.value,
@@ -168,6 +170,10 @@ def _expert_actions(env: InvoiceGuardEnvironment, task_id: TaskID) -> list[dict]
     ]
 
 
+TRACE_LENGTHS = [3, 5, 7, 9]
+SUBMIT_LOSS_WEIGHT = 5.0
+
+
 def build_sft_examples(
     tokenizer,
     env: InvoiceGuardEnvironment,
@@ -176,48 +182,61 @@ def build_sft_examples(
 ) -> list[dict]:
     examples: list[dict] = []
     for task_id in tasks:
-        obs = env.reset(task_id=task_id.value)
-        messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
-        for action_dict in _expert_actions(env, task_id):
-            user_msg = build_observation_prompt(obs, is_first=(len(messages) == 1))
-            messages.append({"role": "user", "content": user_msg})
-            try:
-                prompt_text = tokenizer.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=True,
-                    enable_thinking=False,
-                )
-            except TypeError:
-                prompt_text = tokenizer.apply_chat_template(
-                    messages, tokenize=False, add_generation_prompt=True,
-                )
-            completion_text = json.dumps(action_dict, ensure_ascii=False)
-            prompt_ids = tokenizer(
-                prompt_text,
-                return_tensors="pt",
-                add_special_tokens=False,
-                truncation=True,
-                max_length=max_prompt_tokens,
-            ).input_ids[0]
-            completion_ids = tokenizer(
-                completion_text,
-                return_tensors="pt",
-                add_special_tokens=False,
-            ).input_ids[0]
-            examples.append({
-                "task_id": task_id.value,
-                "action_type": action_dict["action_type"],
-                "prompt_ids": prompt_ids,
-                "completion_ids": completion_ids,
-                "completion_text": completion_text,
-            })
-            messages.append({"role": "assistant", "content": completion_text})
-            obs = env.step(build_action(action_dict))
-            if obs.done:
-                break
+        for n_inv in TRACE_LENGTHS:
+            obs = env.reset(task_id=task_id.value)
+            messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
+            for action_dict in _expert_actions(env, task_id, max_investigation_steps=n_inv):
+                user_msg = build_observation_prompt(obs, is_first=(len(messages) == 1))
+                messages.append({"role": "user", "content": user_msg})
+                try:
+                    prompt_text = tokenizer.apply_chat_template(
+                        messages, tokenize=False, add_generation_prompt=True,
+                        enable_thinking=False,
+                    )
+                except TypeError:
+                    prompt_text = tokenizer.apply_chat_template(
+                        messages, tokenize=False, add_generation_prompt=True,
+                    )
+                completion_text = json.dumps(action_dict, ensure_ascii=False)
+                prompt_ids = tokenizer(
+                    prompt_text,
+                    return_tensors="pt",
+                    add_special_tokens=False,
+                    truncation=True,
+                    max_length=max_prompt_tokens,
+                ).input_ids[0]
+                comp_enc = tokenizer(
+                    completion_text,
+                    return_tensors="pt",
+                    add_special_tokens=False,
+                ).input_ids[0]
+                eos_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
+                if eos_id is not None and eos_id != tokenizer.unk_token_id:
+                    completion_ids = torch.cat([comp_enc, torch.tensor([eos_id])])
+                else:
+                    completion_ids = comp_enc
+                examples.append({
+                    "task_id": task_id.value,
+                    "action_type": action_dict["action_type"],
+                    "prompt_ids": prompt_ids,
+                    "completion_ids": completion_ids,
+                    "completion_text": completion_text,
+                    "trace_inv_steps": n_inv,
+                })
+                messages.append({"role": "assistant", "content": completion_text})
+                obs = env.step(build_action(action_dict))
+                if obs.done:
+                    break
     return examples
 
 
-def completion_loss(model, prompt_ids: torch.Tensor, completion_ids: torch.Tensor, device: torch.device) -> torch.Tensor:
+def completion_loss(
+    model,
+    prompt_ids: torch.Tensor,
+    completion_ids: torch.Tensor,
+    device: torch.device,
+    weight: float = 1.0,
+) -> torch.Tensor:
     input_ids = torch.cat([prompt_ids, completion_ids], dim=0).unsqueeze(0).to(device)
     attention_mask = torch.ones_like(input_ids)
     out = model(input_ids=input_ids, attention_mask=attention_mask, use_cache=False)
@@ -226,7 +245,7 @@ def completion_loss(model, prompt_ids: torch.Tensor, completion_ids: torch.Tenso
     logprobs = F.log_softmax(logits.float(), dim=-1)
     token_lp = logprobs.gather(-1, targets.unsqueeze(-1)).squeeze(-1)
     comp_len = completion_ids.shape[0]
-    return -token_lp[-comp_len:].mean()
+    return -token_lp[-comp_len:].mean() * weight
 
 
 def main() -> None:
@@ -274,7 +293,8 @@ def main() -> None:
     base.config.pad_token_id = tokenizer.pad_token_id
     base.config.use_cache = False
     if cfg.gradient_checkpointing:
-        base = prepare_model_for_kbit_training(base, use_gradient_checkpointing=True)
+        if cfg.use_4bit:
+            base = prepare_model_for_kbit_training(base, use_gradient_checkpointing=True)
         base.gradient_checkpointing_enable()
 
     lora_cfg = LoraConfig(
@@ -292,6 +312,13 @@ def main() -> None:
     env = InvoiceGuardEnvironment()
     train_tasks, eval_tasks = split_tasks(cfg)
     examples = build_sft_examples(tokenizer, env, train_tasks, cfg.max_prompt_tokens)
+    if cfg.submit_only:
+        examples = [ex for ex in examples if ex["action_type"] == "submit_final_resolution"]
+        print(f"[setup] submit-only mode: filtered to {len(examples)} submit examples", flush=True)
+    if cfg.min_investigation_steps > 0:
+        before = len(examples)
+        examples = [ex for ex in examples if ex.get("trace_inv_steps", 0) >= cfg.min_investigation_steps]
+        print(f"[setup] min_investigation_steps={cfg.min_investigation_steps}: {before} -> {len(examples)} examples", flush=True)
     print(f"[setup] train_tasks={len(train_tasks)} eval_tasks={len(eval_tasks)} examples={len(examples)}", flush=True)
 
     tracker = None
@@ -355,12 +382,15 @@ def main() -> None:
 
     t_start = time.time()
     global_step = 0
+    best_eval_score = -1.0
+    best_epoch_dir: Optional[Path] = None
     for epoch in range(cfg.num_epochs):
         random.shuffle(examples)
         total_loss = 0.0
         model.train()
         for i, ex in enumerate(examples, 1):
-            loss = completion_loss(model, ex["prompt_ids"], ex["completion_ids"], device)
+            w = SUBMIT_LOSS_WEIGHT if ex["action_type"] == "submit_final_resolution" else 1.0
+            loss = completion_loss(model, ex["prompt_ids"], ex["completion_ids"], device, weight=w)
             loss.backward()
             total_loss += float(loss.detach().item())
             torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], cfg.grad_clip)
@@ -371,7 +401,16 @@ def main() -> None:
                 log({"step": global_step, "train/epoch": epoch + 1, "train/example": i, "train/loss": total_loss / i})
         log({"step": global_step, "train/epoch": epoch + 1, "train/loss": total_loss / max(len(examples), 1)})
         if cfg.eval_every_epoch:
-            log(evaluate(epoch + 1))
+            eval_result = evaluate(epoch + 1)
+            log(eval_result)
+            score = eval_result.get("eval/avg_grader_score", 0.0)
+            if score > best_eval_score:
+                best_eval_score = score
+                best_epoch_dir = artifact_dir / f"best_epoch_{epoch+1}"
+                best_epoch_dir.mkdir(parents=True, exist_ok=True)
+                model.save_pretrained(str(best_epoch_dir))
+                tokenizer.save_pretrained(str(best_epoch_dir))
+                print(f"[checkpoint] new best epoch {epoch+1}: score={score:.4f}", flush=True)
 
     summary = {
         "run_finished_at": datetime.now(timezone.utc).isoformat(),
@@ -402,6 +441,18 @@ def main() -> None:
         )
         print(f"[push] done -> https://huggingface.co/{repo_id}", flush=True)
 
+        if best_epoch_dir and best_epoch_dir.exists():
+            best_repo = f"{repo_id}-best"
+            create_repo(repo_id=best_repo, repo_type="model", exist_ok=True, private=False, token=token)
+            HfApi(token=token).upload_folder(
+                folder_path=str(best_epoch_dir),
+                repo_id=best_repo,
+                repo_type="model",
+                token=token,
+                commit_message=f"Best epoch checkpoint (score={best_eval_score:.4f})",
+            )
+            print(f"[push] best checkpoint -> https://huggingface.co/{best_repo}", flush=True)
+
 
 def _parse_args() -> SftConfig:
     p = argparse.ArgumentParser()
@@ -415,6 +466,9 @@ def _parse_args() -> SftConfig:
     p.add_argument("--max-new-tokens", type=int, default=None)
     p.add_argument("--max-prompt-tokens", type=int, default=None)
     p.add_argument("--no-push", action="store_true")
+    p.add_argument("--no-4bit", action="store_true")
+    p.add_argument("--submit-only", action="store_true")
+    p.add_argument("--min-investigation-steps", type=int, default=None)
     args = p.parse_args()
 
     cfg = SftConfig()
@@ -438,6 +492,12 @@ def _parse_args() -> SftConfig:
         cfg.max_prompt_tokens = args.max_prompt_tokens
     if args.no_push:
         cfg.push_to_hub = False
+    if args.no_4bit:
+        cfg.use_4bit = False
+    if args.submit_only:
+        cfg.submit_only = True
+    if args.min_investigation_steps is not None:
+        cfg.min_investigation_steps = args.min_investigation_steps
     return cfg
 
 

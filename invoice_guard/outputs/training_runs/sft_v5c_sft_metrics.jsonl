@@ -1,0 +1,45 @@
+{"time": "2026-04-25T20:54:27.613699+00:00", "step": 25, "train/epoch": 1, "train/example": 25, "train/loss": 8.010764617919921}
+{"time": "2026-04-25T20:54:33.281625+00:00", "step": 36, "train/epoch": 1, "train/loss": 6.74773312277264}
+{"time": "2026-04-25T20:59:34.914935+00:00", "step": 1, "eval/avg_grader_score": 0.167775, "eval/avg_cum_reward": -0.469725, "eval/success_rate": 0.0, "eval/avg_steps": 9.5}
+{"time": "2026-04-25T20:59:48.317424+00:00", "step": 61, "train/epoch": 2, "train/example": 25, "train/loss": 3.0124096965789793}
+{"time": "2026-04-25T20:59:54.349490+00:00", "step": 72, "train/epoch": 2, "train/loss": 2.815403468079037}
+{"time": "2026-04-25T21:13:09.660312+00:00", "step": 2, "eval/avg_grader_score": 0.12455, "eval/avg_cum_reward": -0.72545, "eval/success_rate": 0.0, "eval/avg_steps": 12.0}
+{"time": "2026-04-25T21:13:23.012191+00:00", "step": 97, "train/epoch": 3, "train/example": 25, "train/loss": 1.7346467924118043}
+{"time": "2026-04-25T21:13:28.854339+00:00", "step": 108, "train/epoch": 3, "train/loss": 1.5746831744909286}
+{"time": "2026-04-25T21:14:06.283868+00:00", "step": 3, "eval/avg_grader_score": 0.672075, "eval/avg_cum_reward": 0.5220750000000001, "eval/success_rate": 0.5, "eval/avg_steps": 2.0}
+{"time": "2026-04-25T21:14:19.983013+00:00", "step": 133, "train/epoch": 4, "train/example": 25, "train/loss": 0.8443597388267517}
+{"time": "2026-04-25T21:14:25.805507+00:00", "step": 144, "train/epoch": 4, "train/loss": 0.7568342031704055}
+{"time": "2026-04-25T21:15:03.283260+00:00", "step": 4, "eval/avg_grader_score": 0.572075, "eval/avg_cum_reward": 0.42207500000000003, "eval/success_rate": 0.5, "eval/avg_steps": 2.0}
+{"time": "2026-04-25T21:15:16.767855+00:00", "step": 169, "train/epoch": 5, "train/example": 25, "train/loss": 0.33934183925390243}
+{"time": "2026-04-25T21:15:22.833761+00:00", "step": 180, "train/epoch": 5, "train/loss": 0.31159823574125767}
+{"time": "2026-04-25T21:16:04.167376+00:00", "step": 5, "eval/avg_grader_score": 0.661875, "eval/avg_cum_reward": 0.786875, "eval/success_rate": 0.75, "eval/avg_steps": 3.0}
+{"time": "2026-04-25T21:16:17.714026+00:00", "step": 205, "train/epoch": 6, "train/example": 25, "train/loss": 0.22048726610839367}
+{"time": "2026-04-25T21:16:23.789981+00:00", "step": 216, "train/epoch": 6, "train/loss": 0.20538006722927094}
+{"time": "2026-04-25T21:17:08.909785+00:00", "step": 6, "eval/avg_grader_score": 0.7268749999999999, "eval/avg_cum_reward": 0.851875, "eval/success_rate": 0.75, "eval/avg_steps": 3.0}
+{"time": "2026-04-25T21:17:22.435246+00:00", "step": 241, "train/epoch": 7, "train/example": 25, "train/loss": 0.13004669427871704}
+{"time": "2026-04-25T21:17:28.266920+00:00", "step": 252, "train/epoch": 7, "train/loss": 0.13477252496199477}
+{"time": "2026-04-25T21:19:04.066310+00:00", "step": 7, "eval/avg_grader_score": 0.585625, "eval/avg_cum_reward": 0.535625, "eval/success_rate": 0.75, "eval/avg_steps": 6.25}
+{"time": "2026-04-25T21:19:17.358569+00:00", "step": 277, "train/epoch": 8, "train/example": 25, "train/loss": 0.13154520547017456}
+{"time": "2026-04-25T21:19:23.364556+00:00", "step": 288, "train/epoch": 8, "train/loss": 0.11188936816890621}
+{"time": "2026-04-25T21:20:03.487460+00:00", "step": 8, "eval/avg_grader_score": 0.72375, "eval/avg_cum_reward": 0.84875, "eval/success_rate": 0.75, "eval/avg_steps": 3.0}
+{"time": "2026-04-25T21:20:16.891666+00:00", "step": 313, "train/epoch": 9, "train/example": 25, "train/loss": 0.05366081986576319}
+{"time": "2026-04-25T21:20:22.943618+00:00", "step": 324, "train/epoch": 9, "train/loss": 0.05861263217714926}
+{"time": "2026-04-25T21:21:06.080797+00:00", "step": 9, "eval/avg_grader_score": 0.655625, "eval/avg_cum_reward": 0.8556250000000001, "eval/success_rate": 0.75, "eval/avg_steps": 4.5}
+{"time": "2026-04-25T21:21:19.492992+00:00", "step": 349, "train/epoch": 10, "train/example": 25, "train/loss": 0.05077840235084295}
+{"time": "2026-04-25T21:21:25.276891+00:00", "step": 360, "train/epoch": 10, "train/loss": 0.05750295669875211}
+{"time": "2026-04-25T21:23:04.075582+00:00", "step": 10, "eval/avg_grader_score": 0.51875, "eval/avg_cum_reward": 0.39375000000000004, "eval/success_rate": 0.5, "eval/avg_steps": 5.25}
+{"time": "2026-04-25T21:23:17.713859+00:00", "step": 385, "train/epoch": 11, "train/example": 25, "train/loss": 0.04490606278181076}
+{"time": "2026-04-25T21:23:23.849703+00:00", "step": 396, "train/epoch": 11, "train/loss": 0.07563354501811166}
+{"time": "2026-04-25T21:24:05.722431+00:00", "step": 11, "eval/avg_grader_score": 0.648125, "eval/avg_cum_reward": 0.813125, "eval/success_rate": 0.5, "eval/avg_steps": 4.5}
+{"time": "2026-04-25T21:24:19.226320+00:00", "step": 421, "train/epoch": 12, "train/example": 25, "train/loss": 0.06048004907555878}
+{"time": "2026-04-25T21:24:25.268753+00:00", "step": 432, "train/epoch": 12, "train/loss": 0.07053030353239996}
+{"time": "2026-04-25T21:26:00.629460+00:00", "step": 12, "eval/avg_grader_score": 0.50875, "eval/avg_cum_reward": 0.38375000000000004, "eval/success_rate": 0.5, "eval/avg_steps": 5.25}
+{"time": "2026-04-25T21:26:14.269438+00:00", "step": 457, "train/epoch": 13, "train/example": 25, "train/loss": 0.08081061010248959}
+{"time": "2026-04-25T21:26:20.194152+00:00", "step": 468, "train/epoch": 13, "train/loss": 0.07521808935820849}
+{"time": "2026-04-25T21:26:58.685212+00:00", "step": 13, "eval/avg_grader_score": 0.72875, "eval/avg_cum_reward": 0.85375, "eval/success_rate": 0.75, "eval/avg_steps": 3.0}
+{"time": "2026-04-25T21:27:12.338859+00:00", "step": 493, "train/epoch": 14, "train/example": 25, "train/loss": 0.08978029921650886}
+{"time": "2026-04-25T21:27:18.131893+00:00", "step": 504, "train/epoch": 14, "train/loss": 0.07769692404609588}
+{"time": "2026-04-25T21:28:20.803641+00:00", "step": 14, "eval/avg_grader_score": 0.67375, "eval/avg_cum_reward": 0.81375, "eval/success_rate": 0.75, "eval/avg_steps": 3.75}
+{"time": "2026-04-25T21:28:34.345215+00:00", "step": 529, "train/epoch": 15, "train/example": 25, "train/loss": 0.02996798763051629}
+{"time": "2026-04-25T21:28:40.400286+00:00", "step": 540, "train/epoch": 15, "train/loss": 0.03595588888533206}
+{"time": "2026-04-25T21:31:19.011818+00:00", "step": 15, "eval/avg_grader_score": 0.3528, "eval/avg_cum_reward": -0.022199999999999998, "eval/success_rate": 0.25, "eval/avg_steps": 7.5}

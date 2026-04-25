@@ -186,6 +186,7 @@ class TrainConfig:
     format_warmup_lr: float = 5e-5
     save_format_warmup_checkpoint: bool = True
     format_warmup_model_id: Optional[str] = os.environ.get("FORMAT_WARMUP_MODEL_ID")
+    resume_adapter: Optional[str] = os.environ.get("RESUME_ADAPTER")
 
     # LoRA
     lora_r: int = 16
@@ -272,36 +273,36 @@ def compute_group_advantages(
     return [(r - mean) / std for r in rewards]
 
 
-def _format_warmup_actions(env: InvoiceGuardEnvironment, task_id: TaskID) -> list[dict]:
+_ALL_INVESTIGATION_ACTIONS = [
+    {"action_type": "inspect_purchase_order"},
+    {"action_type": "inspect_goods_receipt_note"},
+    {"action_type": "inspect_invoice_line_items"},
+    {"action_type": "inspect_vendor_profile"},
+    {"action_type": "compare_quantity"},
+    {"action_type": "compare_price"},
+    {"action_type": "compare_totals"},
+    {"action_type": "check_for_duplicate_invoice"},
+    {"action_type": "inspect_policy_rules"},
+]
+
+
+def _format_warmup_actions(
+    env: InvoiceGuardEnvironment,
+    task_id: TaskID,
+    max_investigation_steps: int = 9,
+) -> list[dict]:
     case = getattr(env, "_case", None)
     if case is None:
         env.reset(task_id=task_id.value)
         case = getattr(env, "_case", None)
     assert case is not None
     gt = case.ground_truth
-    evidence = list(dict.fromkeys([
-        "inspect_purchase_order",
-        "inspect_goods_receipt_note",
-        "inspect_invoice_line_items",
-        "inspect_vendor_profile",
-        "compare_quantity",
-        "compare_price",
-        "compare_totals",
-        "check_for_duplicate_invoice",
-        "inspect_policy_rules",
-        *gt.acceptable_evidence,
-    ]))
+    investigation = _ALL_INVESTIGATION_ACTIONS[:max_investigation_steps]
+    used_names = [a["action_type"] for a in investigation]
+    evidence = list(dict.fromkeys([*used_names, *gt.acceptable_evidence]))
     explanation = "Key findings: " + "; ".join(gt.key_findings[:3])
     return [
-        {"action_type": "inspect_purchase_order"},
-        {"action_type": "inspect_goods_receipt_note"},
-        {"action_type": "inspect_invoice_line_items"},
-        {"action_type": "inspect_vendor_profile"},
-        {"action_type": "compare_quantity"},
-        {"action_type": "compare_price"},
-        {"action_type": "compare_totals"},
-        {"action_type": "check_for_duplicate_invoice"},
-        {"action_type": "inspect_policy_rules"},
+        *investigation,
         {
             "action_type": "submit_final_resolution",
             "final_decision": gt.correct_decision.value,
@@ -329,13 +330,16 @@ def run_format_warmup(
     for group in optimizer.param_groups:
         group["lr"] = cfg.format_warmup_lr
 
+    warmup_trace_lengths = [3, 5, 7]
+
     policy.train()
     n_pairs = 0
     total_loss = 0.0
     for task_id in tasks[: cfg.format_warmup_tasks]:
+        n_inv = warmup_trace_lengths[n_pairs % len(warmup_trace_lengths)]
         obs = env.reset(task_id=task_id.value)
         messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT}]
-        for action_dict in _format_warmup_actions(env, task_id):
+        for action_dict in _format_warmup_actions(env, task_id, max_investigation_steps=n_inv):
             user_msg = build_observation_prompt(obs, is_first=(len(messages) == 1))
             messages.append({"role": "user", "content": user_msg})
             try:
@@ -355,11 +359,16 @@ def run_format_warmup(
                 truncation=True,
                 max_length=cfg.max_prompt_tokens,
             ).input_ids[0]
-            completion_ids = tokenizer(
+            comp_enc = tokenizer(
                 completion_text,
                 return_tensors="pt",
                 add_special_tokens=False,
             ).input_ids[0]
+            eos_id = tokenizer.convert_tokens_to_ids("<|im_end|>")
+            if eos_id is not None and eos_id != tokenizer.unk_token_id:
+                completion_ids = torch.cat([comp_enc, torch.tensor([eos_id])])
+            else:
+                completion_ids = comp_enc
             lp = _completion_logprobs(policy, prompt_ids, completion_ids, device)
             loss = -lp / max(int(completion_ids.shape[0]), 1)
             loss.backward()
@@ -464,8 +473,8 @@ def train(cfg: TrainConfig) -> None:
     base.config.pad_token_id = tokenizer.pad_token_id
     base.config.use_cache = False
     if cfg.gradient_checkpointing:
-        # For LoRA on quantized backbones, this is the standard memory-saving path.
-        base = prepare_model_for_kbit_training(base, use_gradient_checkpointing=True)
+        if cfg.use_4bit:
+            base = prepare_model_for_kbit_training(base, use_gradient_checkpointing=True)
         base.gradient_checkpointing_enable()
 
     lora_cfg = LoraConfig(
@@ -664,8 +673,24 @@ def train(cfg: TrainConfig) -> None:
             fig.savefig(artifact_dir / "holdout_eval_curve.png", dpi=160)
             plt.close(fig)
 
-    # ----- Format warm-start ---------------------------------------------------
+    # ----- Resume from existing adapter or format warm-start ------------------
     global_step = 0
+    if cfg.resume_adapter:
+        print(f"\n=== resuming from adapter: {cfg.resume_adapter} ===", flush=True)
+        from peft import set_peft_model_state_dict
+        from safetensors.torch import load_file
+        from huggingface_hub import hf_hub_download
+        try:
+            adapter_path = hf_hub_download(
+                cfg.resume_adapter, "adapter_model.safetensors", token=_hf_token()
+            )
+            adapter_weights = load_file(adapter_path)
+            set_peft_model_state_dict(policy, adapter_weights)
+            print(f"[resume] loaded {len(adapter_weights)} tensors from {cfg.resume_adapter}", flush=True)
+        except Exception as e:
+            print(f"[resume] WARNING: could not load adapter: {e}", flush=True)
+        cfg.format_warmup = False
+
     if cfg.format_warmup:
         print("\n=== format warm-start (JSON action behavior) ===", flush=True)
         warmup_metrics = run_format_warmup(
@@ -757,19 +782,23 @@ def train(cfg: TrainConfig) -> None:
                     # so on the first opt step the ratio == 1; the clip becomes
                     # active only across multiple opt steps per batch. We still
                     # apply it for stability when group_size is large.
-                    log_ratio = cur_lp - ref_lp.detach()  # tiny KL surrogate
-                    ratio = torch.exp(cur_lp.detach() - ref_lp.detach())
-                    unclipped = ratio * adv
-                    clipped = torch.clamp(
+                    # Stable PPO surrogate: clamp log-ratio before exp to avoid
+                    # overflow/underflow from very large policy deltas.
+                    log_ratio = (cur_lp - ref_lp.detach()).clamp(-20.0, 20.0)
+                    ratio = torch.exp(log_ratio)
+                    clipped_ratio = torch.clamp(
                         ratio, 1.0 - cfg.ppo_clip, 1.0 + cfg.ppo_clip
-                    ) * adv
-                    pg_term = -torch.min(unclipped, clipped) * cur_lp / (cur_lp.detach().abs() + 1e-6)
-                    # Equivalent to -adv * log_pi (REINFORCE-style) when ratio~1,
-                    # but bounded for stability.
+                    )
+                    adv_t = torch.tensor(float(adv), device=device, dtype=cur_lp.dtype)
+                    pg_term = -torch.min(ratio * adv_t, clipped_ratio * adv_t)
 
-                    kl_term = cfg.kl_coef * (cur_lp - ref_lp.detach()).pow(2).mean()
+                    kl_term = cfg.kl_coef * (cur_lp - ref_lp.detach()).pow(2)
 
                     loss = pg_term + kl_term
+                    if not torch.isfinite(loss):
+                        # Skip pathological pairs instead of poisoning optimizer
+                        # state with inf/nan gradients.
+                        continue
                     loss.backward()
 
                     total_loss_val += float(loss.detach().item())
@@ -905,6 +934,8 @@ def _parse_args() -> TrainConfig:
     p.add_argument("--format-warmup-tasks", type=int, default=None)
     p.add_argument("--no-save-format-warmup", action="store_true")
     p.add_argument("--format-warmup-model-id", default=None)
+    p.add_argument("--sample-temperature", type=float, default=None)
+    p.add_argument("--resume-adapter", default=None)
     args = p.parse_args()
 
     cfg = TrainConfig()
@@ -936,6 +967,10 @@ def _parse_args() -> TrainConfig:
         cfg.save_format_warmup_checkpoint = False
     if args.format_warmup_model_id:
         cfg.format_warmup_model_id = args.format_warmup_model_id
+    if args.sample_temperature is not None:
+        cfg.sample_temperature = args.sample_temperature
+    if args.resume_adapter:
+        cfg.resume_adapter = args.resume_adapter
     if args.no_push:
         cfg.push_to_hub = False
     if args.no_4bit:

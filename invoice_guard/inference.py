@@ -168,6 +168,39 @@ def strip_think_blocks(text: str) -> str:
     return _THINK_RE.sub("", text).strip()
 
 
+def _extract_first_json_object(text: str) -> dict | None:
+    """Find the first balanced {...} in text and parse it."""
+    start = text.find("{")
+    if start == -1:
+        return None
+    depth = 0
+    in_str = False
+    escape = False
+    for i in range(start, len(text)):
+        c = text[i]
+        if escape:
+            escape = False
+            continue
+        if c == "\\":
+            escape = True
+            continue
+        if c == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                try:
+                    return json.loads(text[start : i + 1])
+                except json.JSONDecodeError:
+                    return None
+    return None
+
+
 def parse_llm_response(response_text: str) -> dict:
     """Extract a JSON object from the LLM response."""
     text = strip_think_blocks(response_text).strip()
@@ -189,6 +222,10 @@ def parse_llm_response(response_text: str) -> dict:
                 return json.loads(line)
             except json.JSONDecodeError:
                 continue
+
+    obj = _extract_first_json_object(text)
+    if obj is not None:
+        return obj
 
     return {"action_type": "summarize_findings"}
 
