@@ -14,6 +14,7 @@ try:
         Invoice, InvoiceLineItem, POLineItem, PurchaseOrder,
         TaskID, VendorProfile,
     )
+    from .hard_definitions import HARD_TASK_BUILDERS, HARD_TASK_LIST
 except ImportError:
     from models import (
         CaseData, CaseHistory, CompanyPolicy, DecisionType, Difficulty,
@@ -21,6 +22,7 @@ except ImportError:
         Invoice, InvoiceLineItem, POLineItem, PurchaseOrder,
         TaskID, VendorProfile,
     )
+    from tasks.hard_definitions import HARD_TASK_BUILDERS, HARD_TASK_LIST
 
 
 TASK_LIST: List[TaskID] = [
@@ -59,6 +61,7 @@ ALL_TASKS: List[TaskID] = [
     TaskID.task_10_rounding_false_alarm,
     TaskID.task_11_authorized_overship,
     TaskID.task_12_corrected_resubmission,
+    *HARD_TASK_LIST,
 ]
 
 
@@ -85,6 +88,7 @@ def get_task_case(task_id: TaskID) -> CaseData:
         TaskID.task_10_rounding_false_alarm: _build_task_10,
         TaskID.task_11_authorized_overship: _build_task_11,
         TaskID.task_12_corrected_resubmission: _build_task_12,
+        **HARD_TASK_BUILDERS,
     }
     return builders[task_id]()
 

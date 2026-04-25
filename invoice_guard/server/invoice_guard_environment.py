@@ -70,6 +70,25 @@ R_REPEAT_PENALTY = -0.02
 R_INVALID_ACTION = -0.05
 R_TIMEOUT_PENALTY = -0.10
 
+# -- Round 2 anti-gaming constants ------------------------------------------
+# Submitting a final resolution before doing any real investigation is a
+# common shortcut. Penalize it heavily so RL training cannot exploit it.
+R_SHORTCUT_PENALTY = -0.20
+# Minimum distinct documents the agent must have revealed before submit
+# is considered "investigated". Below this, R_SHORTCUT_PENALTY applies.
+MIN_DOCS_BEFORE_SUBMIT = 2
+# Escalating per-action repeat penalty (applied AFTER the first occurrence).
+# index 0 = first repeat (= 2nd occurrence overall), 1 = 2nd repeat, etc.
+REPEAT_PENALTY_LADDER = [-0.02, -0.05, -0.10, -0.15]
+
+
+def _ladder_penalty(repeat_idx: int) -> float:
+    """Return escalating repeat penalty; clamps to last rung."""
+    if repeat_idx <= 0:
+        return 0.0
+    i = min(repeat_idx - 1, len(REPEAT_PENALTY_LADDER) - 1)
+    return REPEAT_PENALTY_LADDER[i]
+
 
 class InvoiceGuardEnvironment(Environment):
     """
@@ -187,10 +206,22 @@ class InvoiceGuardEnvironment(Environment):
             result = f"Unknown action: {action_name}"
             reward = R_INVALID_ACTION
 
+        base_reward = reward
+        penalties: dict = {}
         if is_repeat and action_name != ActionType.submit_final_resolution.value:
-            reward = min(reward, R_REPEAT_PENALTY)
+            repeat_idx = s.repeated_action_counts[action_name] - 1
+            ladder = _ladder_penalty(repeat_idx)
+            penalties["repeat"] = ladder
+            reward = min(reward, ladder)
 
         s.cumulative_reward += reward
+        self._log_component(
+            action=action_name,
+            base=base_reward,
+            penalties=penalties,
+            total=reward,
+            reason=("repeat" if is_repeat else "step"),
+        )
         remaining = c.max_steps - s.step_count
 
         if remaining <= 0 and not s.is_finalized:
@@ -271,6 +302,11 @@ class InvoiceGuardEnvironment(Environment):
         s.final_explanation = action.explanation
         s.final_confidence = action.confidence
 
+        # Anti-gaming: punish "submit-without-investigation" shortcut.
+        shortcut_penalty = 0.0
+        if len(s.documents_revealed) < MIN_DOCS_BEFORE_SUBMIT:
+            shortcut_penalty = R_SHORTCUT_PENALTY
+
         grader_result = grade_episode(c, s)
 
         confidence_bonus = 0.0
@@ -281,7 +317,18 @@ class InvoiceGuardEnvironment(Environment):
             elif not is_correct and action.confidence >= 0.8:
                 confidence_bonus = -0.05
 
-        s.cumulative_reward += grader_result.score + confidence_bonus
+        terminal_reward = grader_result.score + confidence_bonus + shortcut_penalty
+        s.cumulative_reward += terminal_reward
+        self._log_component(
+            action=ActionType.submit_final_resolution.value,
+            base=grader_result.score,
+            penalties={
+                **({"shortcut": shortcut_penalty} if shortcut_penalty else {}),
+                **({"confidence": confidence_bonus} if confidence_bonus else {}),
+            },
+            total=terminal_reward,
+            reason="terminal_submit",
+        )
 
         return InvoiceGuardObservation(
             case_id=c.case_id,
@@ -300,11 +347,14 @@ class InvoiceGuardEnvironment(Environment):
             last_action_error=False,
             warnings=[],
             done=True,
-            reward=grader_result.score,
+            reward=max(terminal_reward, 0.0),
             grader_result=grader_result.model_dump(),
             metadata={
                 "grader_result": grader_result.model_dump(),
                 "cumulative_reward": s.cumulative_reward,
+                "reward_components": list(s.reward_components),
+                "shortcut_penalty_applied": shortcut_penalty != 0.0,
+                "documents_revealed_count": len(s.documents_revealed),
             },
         )
 
@@ -335,6 +385,7 @@ class InvoiceGuardEnvironment(Environment):
             metadata={
                 "grader_result": grader_result.model_dump(),
                 "cumulative_reward": s.cumulative_reward,
+                "reward_components": list(s.reward_components),
                 "timeout": True,
             },
         )
@@ -702,6 +753,27 @@ class InvoiceGuardEnvironment(Environment):
         s = self._env_state
         if finding not in s.findings_collected:
             s.findings_collected.append(finding)
+
+    def _log_component(
+        self,
+        action: str,
+        base: float,
+        penalties: dict,
+        total: float,
+        reason: str,
+    ) -> None:
+        """Append a per-step reward breakdown for transparency / training signals."""
+        s = self._env_state
+        s.reward_components.append(
+            {
+                "step": s.step_count,
+                "action": action,
+                "base": round(float(base), 4),
+                "penalties": {k: round(float(v), 4) for k, v in penalties.items()},
+                "total": round(float(total), 4),
+                "reason": reason,
+            }
+        )
 
     def _invoice_summary(self) -> str:
         if self._case is None:

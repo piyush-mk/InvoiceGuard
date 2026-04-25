@@ -80,6 +80,17 @@ class TaskID(str, Enum):
     task_10_rounding_false_alarm = "task_10_rounding_false_alarm"
     task_11_authorized_overship = "task_11_authorized_overship"
     task_12_corrected_resubmission = "task_12_corrected_resubmission"
+    # -- Round 2 hard-mode slice (strong gap, baseline target 40-55%) --
+    task_h1_phantom_grn_period = "task_h1_phantom_grn_period"
+    task_h2_kickback_inflated_po = "task_h2_kickback_inflated_po"
+    task_h3_currency_silent_swap = "task_h3_currency_silent_swap"
+    task_h4_threshold_dance = "task_h4_threshold_dance"
+    task_h5_retroactive_amendment = "task_h5_retroactive_amendment"
+    task_h6_returned_then_rebilled = "task_h6_returned_then_rebilled"
+    task_h7_multi_party_pending = "task_h7_multi_party_pending"
+    task_h8_rush_premium_authorized = "task_h8_rush_premium_authorized"
+    task_h9_supplier_id_mismatch = "task_h9_supplier_id_mismatch"
+    task_h10_cross_case_contradiction = "task_h10_cross_case_contradiction"
 
 
 class Difficulty(str, Enum):
@@ -255,6 +266,9 @@ class InvoiceGuardState(State):
     final_confidence: Optional[float] = None
     cumulative_reward: float = 0.0
     repeated_action_counts: Dict[str, int] = Field(default_factory=dict)
+    # Per-step reward components for transparency / training signals.
+    # Each entry: {step, action, base, penalties: {kind: amount, ...}, total, reason}
+    reward_components: List[Dict[str, Any]] = Field(default_factory=list)
 
 
 # -- Grader Result -----------------------------------------------------------
