@@ -31,6 +31,12 @@ COPY . /app/env
 # For standalone builds, openenv will be installed via pyproject.toml
 WORKDIR /app/env
 
+# UV defaults to hardlinking packages from its cache into `.venv`. On Docker BuildKit,
+# `--mount=type=cache` for `/root/.cache/uv` is a different filesystem than `/app/env`, so
+# hardlinks fail and uv falls back to copy anyway. Setting copy mode explicitly avoids
+# the warning and matches what already happens; it does not slow down app runtime.
+ENV UV_LINK_MODE=copy
+
 # Ensure uv is available (for local builds where base image lacks it)
 RUN if ! command -v uv >/dev/null 2>&1; then \
         curl -LsSf https://astral.sh/uv/install.sh | sh && \
@@ -71,10 +77,10 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Set PYTHONPATH so imports work correctly
 ENV PYTHONPATH="/app/env:$PYTHONPATH"
 
-# Health check
+# Health check (match HF Spaces app_port / PORT)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD sh -c 'curl -f "http://localhost:${PORT:-7860}/health" || exit 1'
 
 # Run the FastAPI server
-# The module path is constructed to work with the /app/env structure
-CMD ["sh", "-c", "cd /app/env && uvicorn server.app:app --host 0.0.0.0 --port 8000"]
+# Bind to PORT for HF Spaces compatibility (defaults to 7860)
+CMD ["sh", "-c", "cd /app/env && uvicorn server.app:app --host 0.0.0.0 --port ${PORT:-7860}"]

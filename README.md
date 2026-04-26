@@ -7,7 +7,7 @@ An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates
 - **HF Space Blog (separate MD):** [piyush-mk/invoice-guard/blob/main/BLOG.md](https://huggingface.co/spaces/piyush-mk/invoice-guard/blob/main/BLOG.md)
 - **Website:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
 - **Public Colab Notebook (runnable):** [InvoiceGuard_Round2_GRPO_Reproducibility.ipynb](https://colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb)
-- **YouTube Demo Video:** `Add public URL before final submission`
+- **YouTube Demo Video:** [youtu.be/sZv2oE8gL5A](https://youtu.be/sZv2oE8gL5A)
 
 ## Problem Statement and Hackathon Theme
 
