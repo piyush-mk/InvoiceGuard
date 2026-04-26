@@ -8,6 +8,7 @@ An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates
 **Live Demo Webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
 **Public Colab Notebook (runnable):** [InvoiceGuard_Round2_GRPO_Reproducibility.ipynb](https://colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb)
 **Static Demo UI (GitHub Pages source):** `docs/`
+**YouTube Demo Video:** `Add public URL before final submission`
 
 ## Problem Statement and Hackathon Theme
 
