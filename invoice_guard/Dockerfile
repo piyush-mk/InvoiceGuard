@@ -31,6 +31,12 @@ COPY . /app/env
 # For standalone builds, openenv will be installed via pyproject.toml
 WORKDIR /app/env
 
+# UV defaults to hardlinking packages from its cache into `.venv`. On Docker BuildKit,
+# `--mount=type=cache` for `/root/.cache/uv` is a different filesystem than `/app/env`, so
+# hardlinks fail and uv falls back to copy anyway. Setting copy mode explicitly avoids
+# the warning and matches what already happens; it does not slow down app runtime.
+ENV UV_LINK_MODE=copy
+
 # Ensure uv is available (for local builds where base image lacks it)
 RUN if ! command -v uv >/dev/null 2>&1; then \
         curl -LsSf https://astral.sh/uv/install.sh | sh && \
