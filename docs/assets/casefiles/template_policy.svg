@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#0f1735"/>
+  <rect x="96" y="68" width="1008" height="584" rx="16" fill="#0d142e" stroke="#4f6fcb" stroke-width="3"/>
+  <text x="135" y="132" fill="#8ce2ff" font-size="38" font-family="Segoe UI, Arial">Policy Rules Extract</text>
+  <text x="135" y="176" fill="#d7def6" font-size="24" font-family="Segoe UI, Arial">Thresholds, escalation logic, duplicate handling criteria</text>
+  <rect x="135" y="220" width="930" height="85" rx="8" fill="#1a2753"/>
+  <rect x="135" y="320" width="930" height="85" rx="8" fill="#1a2753"/>
+  <rect x="135" y="420" width="930" height="85" rx="8" fill="#1a2753"/>
+  <rect x="135" y="520" width="930" height="85" rx="8" fill="#1a2753"/>
+  <text x="135" y="680" fill="#8ea2dc" font-size="22" font-family="Segoe UI, Arial">Replace with generated internal policy memo screenshot</text>
+</svg>

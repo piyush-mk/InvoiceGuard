@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#0f1633"/>
+  <rect x="26" y="26" width="1148" height="668" rx="14" fill="#121b3d" stroke="#2e3f78"/>
+  <rect x="58" y="58" width="1084" height="604" rx="10" fill="#f8fbff"/>
+  <text x="90" y="104" fill="#17254d" font-size="34" font-family="Segoe UI, Arial" font-weight="700">Invoice INV-33217</text>
+  <text x="90" y="132" fill="#4f5f8f" font-size="18" font-family="Segoe UI, Arial">Vendor: Aurora Industrial " PO Ref: PO-3122 " Billing Cycle: 2025-03</text>
+  <rect x="90" y="150" width="360" height="34" rx="8" fill="#ffeef0" stroke="#de6f83"/>
+  <text x="104" y="173" fill="#8a2d43" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Alert: Potential duplicate (number similarity)</text>
+  <rect x="90" y="205" width="1020" height="38" fill="#eaf1ff"/>
+  <text x="104" y="230" fill="#31467b" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Item</text><text x="470" y="230" fill="#31467b" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Qty</text><text x="610" y="230" fill="#31467b" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Unit Price</text><text x="830" y="230" fill="#31467b" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Line Total</text>
+  <rect x="90" y="243" width="1020" height="46" fill="#ffffff"/><rect x="90" y="289" width="1020" height="46" fill="#f7faff"/>
+  <text x="104" y="272" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">Hydraulic filter kit HFK-42</text><text x="476" y="272" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">80</text><text x="612" y="272" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">$53.00</text><text x="834" y="272" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">$4,240.00</text>
+  <text x="104" y="318" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">Service period</text><text x="476" y="318" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">Mar 2025</text><text x="612" y="318" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">Recurring</text><text x="834" y="318" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">Valid</text>
+  <rect x="90" y="380" width="500" height="230" rx="10" fill="#f4f7ff" stroke="#d5e0ff"/>
+  <text x="110" y="413" fill="#31467b" font-size="16" font-family="Segoe UI, Arial" font-weight="700">Duplicate Check Context</text>
+  <text x="110" y="444" fill="#4d5f92" font-size="14" font-family="Segoe UI, Arial">Prior invoice INV-33207 exists from previous cycle.</text>
+  <text x="110" y="468" fill="#4d5f92" font-size="14" font-family="Segoe UI, Arial">PO-3122 schedule permits monthly recurring invoices.</text>
+  <text x="110" y="492" fill="#4d5f92" font-size="14" font-family="Segoe UI, Arial">Need PO + GRN verification before rejection.</text>
+  <rect x="610" y="380" width="500" height="230" rx="10" fill="#eef9f2" stroke="#b7e5c8"/>
+  <text x="630" y="413" fill="#245c3e" font-size="16" font-family="Segoe UI, Arial" font-weight="700">Totals</text>
+  <text x="630" y="446" fill="#2f4d3d" font-size="15" font-family="Segoe UI, Arial">Subtotal:</text><text x="980" y="446" fill="#2f4d3d" font-size="15" font-family="Segoe UI, Arial">$4,240.00</text>
+  <text x="630" y="474" fill="#2f4d3d" font-size="15" font-family="Segoe UI, Arial">Tax:</text><text x="980" y="474" fill="#2f4d3d" font-size="15" font-family="Segoe UI, Arial">$0.00</text>
+  <text x="630" y="508" fill="#123f2c" font-size="19" font-family="Segoe UI, Arial" font-weight="700">Grand Total:</text><text x="955" y="508" fill="#123f2c" font-size="19" font-family="Segoe UI, Arial" font-weight="700">$4,240.00</text>
+  <rect x="90" y="620" width="318" height="28" rx="14" fill="#e8f0ff" stroke="#8aa4e6"/>
+  <text x="106" y="639" fill="#2d4684" font-size="13" font-family="Segoe UI, Arial" font-weight="700">Evidence Tag: check_for_duplicate_invoice</text>
+</svg>

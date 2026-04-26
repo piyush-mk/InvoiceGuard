@@ -4,6 +4,8 @@
     "tagline": "Trainable OpenEnv environment for invoice exception resolution",
     "space_url": "https://huggingface.co/spaces/piyush-mk/invoice-guard",
     "code_url": "https://huggingface.co/piyush-mk/invoiceguard-code",
+    "readme_url": "https://github.com/piyush-mk/InvoiceGuard/blob/main/README.md",
+    "blog_url": "https://github.com/piyush-mk/InvoiceGuard/blob/main/BLOG.md",
     "sft_v5c_url": "https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep",
     "sft_v5d_best_url": "https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best"
   },
@@ -19,6 +21,20 @@
     {
       "task_id": "task_8_split_invoice_pattern",
       "title": "Split invoice policy violation",
+      "story_hook": "A supplier splits one large shipment into smaller invoices that stay under auto-approval thresholds.",
+      "policy_rule": "Escalate when repeated sub-threshold invoices indicate threshold-dance behavior.",
+      "document_images": [
+        "./assets/casefiles/task8_invoice.svg",
+        "./assets/casefiles/task8_po.svg",
+        "./assets/casefiles/task8_grn.svg",
+        "./assets/casefiles/task8_policy.svg"
+      ],
+      "document_evidence_tags": [
+        "inspect_invoice_line_items",
+        "inspect_purchase_order, compare_price",
+        "inspect_goods_receipt_note",
+        "inspect_policy_rules, submit_final_resolution"
+      ],
       "baseline_behavior": [
         "inspect_purchase_order",
         "inspect_goods_receipt_note",
@@ -39,11 +55,25 @@
         "compare_price",
         "submit_final_resolution"
       ],
-      "summary": "Baseline never submits. Trained model investigates key evidence, then submits a policy-aware escalation."
+      "summary": "Baseline never submits. Trained model inspects PO and GRN quickly, checks pricing context, and escalates with policy-grounded evidence."
     },
     {
       "task_id": "task_6_false_positive_duplicate",
       "title": "False-positive duplicate trap",
+      "story_hook": "The invoice resembles a duplicate, but the PO and vendor schedule indicate a legitimate recurring order.",
+      "policy_rule": "Do not reject solely on number similarity when PO lineage and delivery context are valid.",
+      "document_images": [
+        "./assets/casefiles/task6_invoice.svg",
+        "./assets/casefiles/task6_po.svg",
+        "./assets/casefiles/task6_grn.svg",
+        "./assets/casefiles/task6_policy.svg"
+      ],
+      "document_evidence_tags": [
+        "check_for_duplicate_invoice",
+        "inspect_purchase_order, compare_invoice_totals",
+        "inspect_goods_receipt_note",
+        "inspect_policy_rules, submit_final_resolution"
+      ],
       "baseline_behavior": [
         "inspect_purchase_order",
         "inspect_goods_receipt_note",
@@ -64,7 +94,7 @@
         "inspect_vendor_profile",
         "submit_final_resolution"
       ],
-      "summary": "Baseline loops for 12 steps. Trained policy resolves in 3-5 steps with materially better grader outcomes."
+      "summary": "Baseline loops for 12 steps. Trained policy validates PO, delivery, and vendor profile, then submits a clean approval decision."
     }
   ]
 }

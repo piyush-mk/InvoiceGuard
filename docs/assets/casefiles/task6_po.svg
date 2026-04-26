@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#0e1734"/>
+  <rect x="24" y="24" width="1152" height="672" rx="14" fill="#121d40" stroke="#2f4382"/>
+  <rect x="56" y="56" width="1088" height="608" rx="10" fill="#f7faff"/>
+  <text x="88" y="104" fill="#1a2a56" font-size="33" font-family="Segoe UI, Arial" font-weight="700">Purchase Order PO-3122</text>
+  <text x="88" y="132" fill="#55679c" font-size="17" font-family="Segoe UI, Arial">Buyer: AeroMach Systems " Supplier: Aurora Industrial " Contract Type: Recurring</text>
+  <rect x="88" y="150" width="340" height="34" rx="8" fill="#e8f8ee" stroke="#67bf89"/>
+  <text x="102" y="173" fill="#2a6b45" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Cadence: Monthly Authorized Billing</text>
+  <rect x="88" y="205" width="1030" height="38" fill="#eaf1ff"/>
+  <text x="100" y="230" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Month</text><text x="270" y="230" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">SKU</text><text x="480" y="230" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Qty</text><text x="620" y="230" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Unit Price</text><text x="840" y="230" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Expected Total</text>
+  <rect x="88" y="243" width="1030" height="44" fill="#fff"/><rect x="88" y="287" width="1030" height="44" fill="#f7faff"/><rect x="88" y="331" width="1030" height="44" fill="#fff"/>
+  <text x="100" y="271" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">Jan-2025</text><text x="270" y="271" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">HFK-42</text><text x="486" y="271" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">80</text><text x="625" y="271" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">$53.00</text><text x="846" y="271" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">$4,240.00</text>
+  <text x="100" y="315" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">Feb-2025</text><text x="270" y="315" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">HFK-42</text><text x="486" y="315" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">80</text><text x="625" y="315" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">$53.00</text><text x="846" y="315" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">$4,240.00</text>
+  <text x="100" y="359" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">Mar-2025</text><text x="270" y="359" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">HFK-42</text><text x="486" y="359" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">80</text><text x="625" y="359" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">$53.00</text><text x="846" y="359" fill="#21325f" font-size="14" font-family="Segoe UI, Arial">$4,240.00</text>
+  <rect x="88" y="400" width="500" height="210" rx="10" fill="#f4f7ff" stroke="#d8e2ff"/>
+  <text x="108" y="434" fill="#324881" font-size="16" font-family="Segoe UI, Arial" font-weight="700">Linked Contract Clauses</text>
+  <text x="108" y="463" fill="#4f6295" font-size="14" font-family="Segoe UI, Arial">" recurring supply, monthly invoice allowed</text>
+  <text x="108" y="487" fill="#4f6295" font-size="14" font-family="Segoe UI, Arial">" invoice IDs may share prefix/suffix patterns</text>
+  <text x="108" y="511" fill="#4f6295" font-size="14" font-family="Segoe UI, Arial">" rejection requires PO or GRN mismatch evidence</text>
+  <rect x="610" y="400" width="508" height="210" rx="10" fill="#eef9f2" stroke="#b7e5c8"/>
+  <text x="630" y="434" fill="#245c3e" font-size="16" font-family="Segoe UI, Arial" font-weight="700">Approval Chain</text>
+  <text x="630" y="463" fill="#2f4d3d" font-size="14" font-family="Segoe UI, Arial">Procurement Ops: Approved</text>
+  <text x="630" y="487" fill="#2f4d3d" font-size="14" font-family="Segoe UI, Arial">Finance Compliance: Approved</text>
+  <text x="630" y="511" fill="#2f4d3d" font-size="14" font-family="Segoe UI, Arial">Duplicate variance waiver: Active</text>
+  <rect x="90" y="620" width="255" height="28" rx="14" fill="#e8f0ff" stroke="#8aa4e6"/>
+  <text x="106" y="639" fill="#2d4684" font-size="13" font-family="Segoe UI, Arial" font-weight="700">Evidence Tag: inspect_purchase_order</text>
+  <rect x="356" y="620" width="268" height="28" rx="14" fill="#ecfff3" stroke="#8dd4aa"/>
+  <text x="372" y="639" fill="#2b6c4a" font-size="13" font-family="Segoe UI, Arial" font-weight="700">Evidence Tag: compare_invoice_totals</text>
+</svg>

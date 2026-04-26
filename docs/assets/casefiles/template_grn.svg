@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#101836"/>
+  <rect x="88" y="64" width="1024" height="592" rx="16" fill="#0d1530" stroke="#4f6fcb" stroke-width="3"/>
+  <text x="130" y="130" fill="#8ce2ff" font-size="40" font-family="Segoe UI, Arial">Goods Receipt Note (GRN)</text>
+  <text x="130" y="180" fill="#d7def6" font-size="26" font-family="Segoe UI, Arial">Fields: received qty, accepted/rejected qty, delivery date</text>
+  <rect x="130" y="230" width="948" height="330" rx="10" fill="#1a2753"/>
+  <line x1="130" y1="285" x2="1078" y2="285" stroke="#8ea2dc" stroke-width="1.5"/>
+  <line x1="130" y1="340" x2="1078" y2="340" stroke="#8ea2dc" stroke-width="1.5"/>
+  <line x1="130" y1="395" x2="1078" y2="395" stroke="#8ea2dc" stroke-width="1.5"/>
+  <line x1="130" y1="450" x2="1078" y2="450" stroke="#8ea2dc" stroke-width="1.5"/>
+  <line x1="130" y1="505" x2="1078" y2="505" stroke="#8ea2dc" stroke-width="1.5"/>
+  <text x="130" y="680" fill="#8ea2dc" font-size="22" font-family="Segoe UI, Arial">Replace with generated warehouse receipt/GRN document</text>
+</svg>

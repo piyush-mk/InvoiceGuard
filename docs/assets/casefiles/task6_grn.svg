@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#0f1836"/>
+  <rect x="26" y="26" width="1148" height="668" rx="14" fill="#142043" stroke="#3c58a8"/>
+  <rect x="58" y="58" width="1084" height="604" rx="10" fill="#f8fbff"/>
+  <text x="90" y="104" fill="#1a2c5a" font-size="34" font-family="Segoe UI, Arial" font-weight="700">Goods Receipt Note GRN-6143</text>
+  <text x="90" y="132" fill="#51649a" font-size="17" font-family="Segoe UI, Arial">Linked PO: PO-3122 " Warehouse: WH-Central-01 " Receiver: K. Singh</text>
+  <rect x="90" y="152" width="300" height="34" rx="8" fill="#e8f8ee" stroke="#67bf89"/>
+  <text x="104" y="174" fill="#2a6b45" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Status: Matched Recurring Delivery</text>
+  <rect x="90" y="210" width="1020" height="38" fill="#eaf1ff"/>
+  <text x="102" y="235" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Cycle</text><text x="280" y="235" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Receipt Date</text><text x="500" y="235" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Accepted Qty</text><text x="700" y="235" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Rejected Qty</text><text x="900" y="235" fill="#344a82" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Notes</text>
+  <rect x="90" y="248" width="1020" height="44" fill="#fff"/><rect x="90" y="292" width="1020" height="44" fill="#f7faff"/>
+  <text x="102" y="276" fill="#223562" font-size="14" font-family="Segoe UI, Arial">Feb-2025</text><text x="280" y="276" fill="#223562" font-size="14" font-family="Segoe UI, Arial">2025-02-28</text><text x="510" y="276" fill="#223562" font-size="14" font-family="Segoe UI, Arial">80</text><text x="710" y="276" fill="#223562" font-size="14" font-family="Segoe UI, Arial">0</text><text x="900" y="276" fill="#223562" font-size="14" font-family="Segoe UI, Arial">Completed</text>
+  <text x="102" y="320" fill="#223562" font-size="14" font-family="Segoe UI, Arial">Mar-2025</text><text x="280" y="320" fill="#223562" font-size="14" font-family="Segoe UI, Arial">2025-03-30</text><text x="510" y="320" fill="#223562" font-size="14" font-family="Segoe UI, Arial">80</text><text x="710" y="320" fill="#223562" font-size="14" font-family="Segoe UI, Arial">0</text><text x="900" y="320" fill="#223562" font-size="14" font-family="Segoe UI, Arial">Completed</text>
+  <rect x="90" y="380" width="1020" height="230" rx="10" fill="#f4f7ff" stroke="#d5e0ff"/>
+  <text x="110" y="414" fill="#344a82" font-size="16" font-family="Segoe UI, Arial" font-weight="700">Receiving Log</text>
+  <text x="110" y="444" fill="#51649a" font-size="14" font-family="Segoe UI, Arial">09:22  Dock C received palletized filter kits</text>
+  <text x="110" y="468" fill="#51649a" font-size="14" font-family="Segoe UI, Arial">10:08  Quantity matched PO monthly schedule</text>
+  <text x="110" y="492" fill="#51649a" font-size="14" font-family="Segoe UI, Arial">11:16  No damage report, acceptance complete</text>
+  <text x="110" y="516" fill="#51649a" font-size="14" font-family="Segoe UI, Arial">12:01  Forwarded to AP matching queue</text>
+  <rect x="90" y="620" width="285" height="28" rx="14" fill="#e8f0ff" stroke="#8aa4e6"/>
+  <text x="106" y="639" fill="#2d4684" font-size="13" font-family="Segoe UI, Arial" font-weight="700">Evidence Tag: inspect_goods_receipt_note</text>
+</svg>

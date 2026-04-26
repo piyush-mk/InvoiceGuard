@@ -1,5 +1,7 @@
 # InvoiceGuard: Teaching a 4B Model to Resolve Invoice Exceptions
 
+Live demo webpage: [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
+
 ## The Problem
 
 Three-way invoice matching is one of the most repetitive and error-prone workflows in enterprise finance. Teams have to compare invoices, purchase orders, and goods receipts, then make policy-compliant decisions quickly.
@@ -154,5 +156,6 @@ The untrained model times out at 12 steps. Trained models usually resolve in 3-5
   - [piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep) (best v5c adapter)
   - [piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best) (best v5d checkpoint)
   - [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code) (training scripts)
+- **Live demo webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
 - **Repo artifacts:** `invoice_guard/outputs/training_runs/` includes raw metrics JSONL, summaries, and curves
 - **Baseline files:** `invoice_guard/outputs/baseline_scores/` includes local and API per-task evaluation traces

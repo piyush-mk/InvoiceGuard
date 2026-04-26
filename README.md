@@ -4,6 +4,7 @@ An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates
 
 **Hugging Face Space:** [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
 **Hugging Face Code Repo:** [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code)
+**Live Demo Webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
 **Static Demo UI (GitHub Pages source):** `docs/`
 
 ## Motivation
@@ -243,6 +244,7 @@ The base model already knows how to investigate. Training on investigation examp
 | Best SFT adapter (v5d, best-epoch checkpoint) | [piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best) |
 | Training code | [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code) |
 | Deployed environment | [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard) |
+| Live demo webpage | [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/) |
 
 ### Alignment with Judging Criteria
 
