@@ -11,13 +11,32 @@ function escapeHtml(str) {
     .replaceAll(">", "&gt;");
 }
 
+function normalizeMarkdownPath(path) {
+  let p = path.trim();
+  if (p.startsWith("./invoice_guard/outputs/training_runs/")) {
+    p = p.replace("./invoice_guard/outputs/training_runs/", "./assets/img/");
+  }
+  if (p.startsWith("invoice_guard/outputs/training_runs/")) {
+    p = p.replace("invoice_guard/outputs/training_runs/", "./assets/img/");
+  }
+  return p;
+}
+
 function parseInlineMd(text) {
   let out = escapeHtml(text);
   out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
   out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   out = out.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-  out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:10px; border:1px solid var(--border);" />');
-  out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  out = out.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)/g,
+    (_, alt, src) =>
+      `<img src="${normalizeMarkdownPath(src)}" alt="${alt}" style="max-width:100%; border-radius:10px; border:1px solid var(--border);" />`
+  );
+  out = out.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    (_, label, href) =>
+      `<a href="${normalizeMarkdownPath(href)}" target="_blank" rel="noreferrer">${label}</a>`
+  );
   return out;
 }
 
@@ -139,6 +158,7 @@ function setActiveNav() {
 }
 
 function fillLinks(project) {
+  const repoLinks = document.querySelectorAll("[data-repo-link]");
   const spaceLinks = document.querySelectorAll("[data-space-link]");
   const codeLinks = document.querySelectorAll("[data-code-link]");
   const sftV5cLinks = document.querySelectorAll("[data-sft-v5c-link]");
@@ -146,6 +166,7 @@ function fillLinks(project) {
   const readmeLinks = document.querySelectorAll("[data-readme-link]");
   const blogLinks = document.querySelectorAll("[data-blog-link]");
 
+  repoLinks.forEach((el) => (el.href = project.repo_url));
   spaceLinks.forEach((el) => (el.href = project.space_url));
   codeLinks.forEach((el) => (el.href = project.code_url));
   sftV5cLinks.forEach((el) => (el.href = project.sft_v5c_url));

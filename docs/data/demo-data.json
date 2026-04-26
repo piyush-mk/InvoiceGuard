@@ -2,6 +2,7 @@
   "project": {
     "name": "InvoiceGuard",
     "tagline": "Trainable OpenEnv environment for invoice exception resolution",
+    "repo_url": "https://github.com/piyush-mk/InvoiceGuard",
     "space_url": "https://huggingface.co/spaces/piyush-mk/invoice-guard",
     "code_url": "https://huggingface.co/piyush-mk/invoiceguard-code",
     "readme_url": "https://github.com/piyush-mk/InvoiceGuard/blob/main/README.md",
