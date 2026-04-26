@@ -115,12 +115,30 @@ Same core strategy, plus explicit best-checkpoint saving.
 | Local base (no training) | 0.137 | 0% | — |
 | SFT v5c (best epoch) | 0.729 | 75% | **5.3× improvement** |
 | SFT v5d (best checkpoint) | 0.704 | 75% | **5.1× improvement** |
+| GRPO v6c (warm-start init) | 0.704 | 75% | **5.1× improvement** |
+| GRPO v6c (best iter2) | 0.775 | 75% | **5.6× improvement** |
+| GRPO v6c (final iter3) | 0.720 | 75% | **5.2× improvement** |
 | API baseline (for reference) | 0.827 | — | — |
 
 The trained model closes roughly 86% of the local-to-cloud gap:
 `(0.729 - 0.137) / (0.827 - 0.137) = 85.8%`.
 
+With warm-started GRPO, the best checkpoint closes about 92.5% of that gap:
+`(0.775 - 0.137) / (0.827 - 0.137) = 92.5%`.
+
 ## Training Curves
+
+### End to End Progression (Baseline → SFT → GRPO)
+
+![Round 2 Progression Score](./invoice_guard/outputs/training_runs/round2_progression_eval_score.png)
+
+This view combines all stages into one timeline: local baseline at 0.137, SFT in the 0.70 range, then warm-started GRPO peaking at 0.775 before ending at 0.720.
+
+### Stage Snapshot (Score, Success, Steps)
+
+![Round 2 Stage Comparison](./invoice_guard/outputs/training_runs/round2_stage_comparison.png)
+
+This summarizes where each stage lands on holdout tasks, including the fact that GRPO best is better than GRPO final.
 
 ### Eval Grader Score Over Epochs
 
@@ -145,6 +163,24 @@ Success rises from 0% to 50-75%, which is the strongest behavioral evidence that
 ![Average Steps](./invoice_guard/outputs/training_runs/sft_avg_steps.png)
 
 The untrained model times out at 12 steps. Trained models usually resolve in 3-5 steps after focused investigation.
+
+### GRPO Training Signals
+
+![GRPO Training Signals](./invoice_guard/outputs/training_runs/round2_grpo_training_signals.png)
+
+Reward and grader trends are strong overall, but we still see occasional instability pockets on specific tasks.
+
+### GRPO Loss Components
+
+![GRPO Loss Components](./invoice_guard/outputs/training_runs/round2_grpo_loss_components_log.png)
+
+Loss decomposition shows highly variable policy loss with relatively small KL loss, which explains why the best GRPO checkpoint appears before the final one.
+
+### SFT Loss Curves (Log Scale)
+
+![SFT Loss Log](./invoice_guard/outputs/training_runs/round2_sft_training_loss_log.png)
+
+Both submit-focused SFT runs converge quickly, which is exactly what we wanted before handing off to GRPO.
 
 ## Infrastructure and Artifacts
 

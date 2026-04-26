@@ -103,6 +103,62 @@
         </div>
       </section>
 
+      <section class="section-card">
+        <h2>Agent walkthrough simulator (easy, medium, hard)</h2>
+        <p>
+          Step through one representative case per difficulty and see exactly how the trained agent
+          reads documents, uses tools, and lands on the final decision.
+        </p>
+        <div class="demo-controls">
+          <button id="prevSimCase">Previous case</button>
+          <button id="nextSimCase">Next case</button>
+          <button id="nextSimStep">Next step</button>
+          <button id="toggleSimAutoplay">Auto-play</button>
+          <span class="badge" id="simCaseTitle">Loading simulator...</span>
+          <span class="badge" id="simStepProgress">Step 0/0</span>
+        </div>
+        <div class="policy-box"><strong>Goal:</strong> <span id="simGoal"></span></div>
+        <div class="sim-layout">
+          <article class="section-card">
+            <h3>Current step</h3>
+            <p class="sim-step-head" id="simStepHead"></p>
+            <p><strong>Reads:</strong> <span id="simReads"></span></p>
+            <p><strong>Tool:</strong> <code id="simTool"></code></p>
+            <p id="simResult"></p>
+          </article>
+          <article class="section-card">
+            <h3>Action trace</h3>
+            <ol class="actions" id="simTrace"></ol>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-card">
+        <h2>Training progression dashboard</h2>
+        <p>
+          This is the full journey from local baseline to submit-focused SFT and then warm-started
+          GRPO. The best GRPO checkpoint appears at iteration 2.
+        </p>
+        <div class="plot-grid">
+          <article class="plot-card">
+            <img src="./assets/img/round2_progression_eval_score.png" alt="Baseline SFT GRPO score progression" />
+            <div class="caption">Score progression: baseline → SFT → GRPO.</div>
+          </article>
+          <article class="plot-card">
+            <img src="./assets/img/round2_stage_comparison.png" alt="Stage comparison chart" />
+            <div class="caption">Stage snapshot for score, success rate, and steps.</div>
+          </article>
+          <article class="plot-card">
+            <img src="./assets/img/round2_grpo_training_signals.png" alt="GRPO training signals" />
+            <div class="caption">GRPO signal trends across task updates.</div>
+          </article>
+          <article class="plot-card">
+            <img src="./assets/img/round2_grpo_loss_components_log.png" alt="GRPO loss components" />
+            <div class="caption">GRPO policy and KL loss components (log scale).</div>
+          </article>
+        </div>
+      </section>
+
       <p class="footer">
         GitHub Pages-ready static site. No backend required. If anything fails to load, check
         <code id="appError"></code>

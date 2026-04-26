@@ -1,0 +1,15 @@
+[
+  ".gitattributes",
+  "README.md",
+  "adapter_config.json",
+  "adapter_model.safetensors",
+  "chat_template.jinja",
+  "tokenizer.json",
+  "tokenizer_config.json",
+  "training_artifacts/holdout_eval_curve.png",
+  "training_artifacts/metrics.jsonl",
+  "training_artifacts/rollout_samples.jsonl",
+  "training_artifacts/training_loss_curve.png",
+  "training_artifacts/training_reward_curve.png",
+  "training_artifacts/training_summary.json"
+]

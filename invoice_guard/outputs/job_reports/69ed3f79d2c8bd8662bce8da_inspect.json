@@ -1,0 +1,52 @@
+{
+  "id": "69ed3f79d2c8bd8662bce8da",
+  "created_at": "2026-04-25 22:26:01.495000+00:00",
+  "docker_image": "ghcr.io/astral-sh/uv:python3.12-bookworm",
+  "space_id": null,
+  "owner": "JobOwner(id='63cd75f81c8a5d1d7d7a074a', name='piyush-mk', type='user')",
+  "command": [
+    "uv",
+    "run",
+    "https://huggingface.co/piyush-mk/invoiceguard-code/resolve/main/training/train_grpo.py",
+    "--no-4bit",
+    "--no-format-warmup",
+    "--resume-adapter",
+    "piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best",
+    "--num-iterations",
+    "3",
+    "--group-size",
+    "8",
+    "--sample-temperature",
+    "1.1",
+    "--eval-holdout-canonical",
+    "2",
+    "--eval-holdout-hard",
+    "2",
+    "--max-new-tokens",
+    "384",
+    "--max-prompt-tokens",
+    "2048",
+    "--lr",
+    "5e-6"
+  ],
+  "arguments": [],
+  "environment": {
+    "BASE_MODEL": "Qwen/Qwen3-4B-Instruct-2507",
+    "HF_USERNAME": "piyush-mk",
+    "HUB_MODEL_ID": "invoiceguard-qwen3-4b-grpo-v6c-stable",
+    "INVOICEGUARD_CODE_REPO": "piyush-mk/invoiceguard-code",
+    "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
+    "TOKENIZERS_PARALLELISM": "false",
+    "TRACKIO_PROJECT": "invoiceguard-round2",
+    "TRACKIO_RUN_NAME": "qwen3-4b-grpo-v6c-stable"
+  },
+  "secrets": [
+    "HF_TOKEN"
+  ],
+  "flavor": "l40sx1",
+  "labels": {},
+  "volumes": null,
+  "status": "JobStatus(stage='COMPLETED', message=None)",
+  "endpoint": "https://huggingface.co",
+  "url": "https://huggingface.co/jobs/piyush-mk/69ed3f79d2c8bd8662bce8da"
+}
