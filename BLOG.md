@@ -150,6 +150,7 @@ If I had one more iteration cycle, I would:
 ## Artifacts and Links
 
 - HF Space: [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
+- YouTube demo: [youtu.be/sZv2oE8gL5A](https://youtu.be/sZv2oE8gL5A)
 - Training code: [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code)
 - Best SFT checkpoint: [piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best)
 - Completed all-task adapter eval run: [HF Job 69ed929cd70108f37acdf80b](https://huggingface.co/jobs/piyush-mk/69ed929cd70108f37acdf80b)
