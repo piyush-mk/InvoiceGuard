@@ -1,0 +1,11 @@
+{
+  "run_finished_at": "2026-04-26T04:32:36.561110+00:00",
+  "base_model": "Qwen/Qwen3-4B-Instruct-2507",
+  "adapter_repo": "piyush-mk/invoiceguard-qwen3-4b-grpo-v6c-stable",
+  "slice": "all",
+  "n_tasks": 22,
+  "avg_grader_score": 0.5079863636363636,
+  "avg_cumulative_reward": 0.4420772727272727,
+  "success_rate": 0.36363636363636365,
+  "avg_steps": 6.2727272727272725
+}

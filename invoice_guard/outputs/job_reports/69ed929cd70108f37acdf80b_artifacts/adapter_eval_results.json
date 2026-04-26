@@ -1,0 +1,542 @@
+[
+  {
+    "task_id": "task_1_clean_match",
+    "grader_score": 0.215,
+    "cumulative_reward": -0.30500000000000005,
+    "success": false,
+    "n_steps": 10,
+    "terminal_decision": null,
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_purchase_order\"}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      -0.02,
+      -0.05,
+      -0.1,
+      -0.15,
+      -0.15,
+      0.11499999999999999
+    ]
+  },
+  {
+    "task_id": "task_2_partial_receipt",
+    "grader_score": 0.1767,
+    "cumulative_reward": -0.17329999999999998,
+    "success": false,
+    "n_steps": 10,
+    "terminal_decision": null,
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "\"inspect_vendor_profile\"}",
+      "\"inspect_vendor_profile\"}",
+      "\"inspect_vendor_profile\"}",
+      "\"inspect_vendor_profile\"}",
+      "\"inspect_vendor_profile\"}",
+      "\"inspect_vendor_profile\"}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.02,
+      -0.02,
+      -0.05,
+      -0.1,
+      -0.15,
+      0.07669999999999999
+    ]
+  },
+  {
+    "task_id": "task_3_price_variance",
+    "grader_score": 0.9633,
+    "cumulative_reward": 1.2133,
+    "success": true,
+    "n_steps": 5,
+    "terminal_decision": "escalate_for_supervisor_review",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"escalate_for_supervisor_review\", \"exception_type\": \"price_mismatch\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: Billed unit price $110 vs PO unit price $100 (10% variance); Both invoice and PO acknowledge price adjustment; Variance exceeds 5% price tolerance; Requires supervisor review per policy\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      1.0133
+    ]
+  },
+  {
+    "task_id": "task_4_duplicate_invoice",
+    "grader_score": 0.34,
+    "cumulative_reward": 0.44000000000000006,
+    "success": false,
+    "n_steps": 4,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\"], \"explanation\": \"Key findings: Quantities match: billed=ordered=received=200; Prices match: $30.00 vs PO; No discrepancies across all critical checks\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.29000000000000004
+    ]
+  },
+  {
+    "task_id": "task_5_mixed_discrepancy",
+    "grader_score": 0.97,
+    "cumulative_reward": 1.17,
+    "success": true,
+    "n_steps": 4,
+    "terminal_decision": "escalate_for_supervisor_review",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"escalate_for_supervisor_review\", \"exception_type\": \"mixed_discrepancy\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: Price variance: $55 billed vs $50 PO (10%); Quantity discrepancy: billed 200 vs received 150 (25%); Both price escalation and quantity hold conditions triggered under policy\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      1.02
+    ]
+  },
+  {
+    "task_id": "task_6_false_positive_duplicate",
+    "grader_score": 0.9767,
+    "cumulative_reward": 1.2267,
+    "success": true,
+    "n_steps": 5,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "0{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: All line items match: Qty: 1 vs 1, Price: $4,500 vs $4,500, Total: $4,860 vs $4,860; No discrepancies detected across quantity, price, or total; Vendor is high-risk but no actual fraud detected\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      1.0267
+    ]
+  },
+  {
+    "task_id": "task_7_retroactive_price",
+    "grader_score": 0.4,
+    "cumulative_reward": 0.5,
+    "success": false,
+    "n_steps": 4,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: ITEM-PP01: billed $42.00 vs PO $42.00 (same); ITEM-PP02: billed $11.50 vs PO $11.50 (same) -- All prices match exactly; Quantities: both items exactly match ordered and received\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.35000000000000003
+    ]
+  },
+  {
+    "task_id": "task_8_split_invoice_pattern",
+    "grader_score": 0.73,
+    "cumulative_reward": 0.93,
+    "success": true,
+    "n_steps": 4,
+    "terminal_decision": "escalate_for_supervisor_review",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "3{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"escalate_for_supervisor_review\", \"exception_type\": \"total_amount_mismatch\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: Invoice line items show 3 units at $14,500 = $43,500, but PO shows 3 units at $14,500 = $43,500 -- numerically consistent; PO Amendment 1 retroactively set agreed price to $14,500 from $15,000; Both invoice and PO are now numerically aligned\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.78
+    ]
+  },
+  {
+    "task_id": "task_9_clean_from_risky_vendor",
+    "grader_score": 0.9433,
+    "cumulative_reward": 1.1433,
+    "success": true,
+    "n_steps": 4,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: All quantities match exactly: 50 couplings and 200 gasket kits; All prices match PO exactly: $85.00 and $12.50; No variances detected across any line items or totals\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.9933000000000001
+    ]
+  },
+  {
+    "task_id": "task_10_rounding_false_alarm",
+    "grader_score": 0.1083,
+    "cumulative_reward": -0.7117000000000001,
+    "success": false,
+    "n_steps": 12,
+    "terminal_decision": null,
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      -0.02,
+      -0.05,
+      -0.1,
+      -0.15,
+      -0.15,
+      -0.15,
+      -0.15,
+      0.008299999999999988
+    ]
+  },
+  {
+    "task_id": "task_11_authorized_overship",
+    "grader_score": 0.1425,
+    "cumulative_reward": -0.6775000000000001,
+    "success": false,
+    "n_steps": 12,
+    "terminal_decision": null,
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      -0.02,
+      -0.05,
+      -0.1,
+      -0.15,
+      -0.15,
+      -0.15,
+      -0.15,
+      0.04249999999999998
+    ]
+  },
+  {
+    "task_id": "task_12_corrected_resubmission",
+    "grader_score": 0.122,
+    "cumulative_reward": -0.6980000000000001,
+    "success": false,
+    "n_steps": 12,
+    "terminal_decision": null,
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      -0.02,
+      -0.05,
+      -0.1,
+      -0.15,
+      -0.15,
+      -0.15,
+      -0.15,
+      0.021999999999999992
+    ]
+  },
+  {
+    "task_id": "task_h1_phantom_grn_period",
+    "grader_score": 0.1888,
+    "cumulative_reward": -0.6312000000000001,
+    "success": false,
+    "n_steps": 12,
+    "terminal_decision": null,
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      -0.02,
+      -0.05,
+      -0.1,
+      -0.15,
+      -0.15,
+      -0.15,
+      -0.15,
+      0.08879999999999999
+    ]
+  },
+  {
+    "task_id": "task_h2_kickback_inflated_po",
+    "grader_score": 0.3525,
+    "cumulative_reward": 0.5025,
+    "success": false,
+    "n_steps": 5,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "2{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: All quantities match (400 ordered, 400 billed, 400 received); All prices match ($85 billed vs $85 PO); No discrepancies detected across documents\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.3025
+    ]
+  },
+  {
+    "task_id": "task_h3_currency_silent_swap",
+    "grader_score": 0.39,
+    "cumulative_reward": 0.49000000000000005,
+    "success": false,
+    "n_steps": 4,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: Quantities match: billed=ordered=received=80; Prices match: $125 billed vs $125 PO; No discrepancies detected across all critical checks\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.34
+    ]
+  },
+  {
+    "task_id": "task_h4_threshold_dance",
+    "grader_score": 0.3925,
+    "cumulative_reward": 0.5425,
+    "success": false,
+    "n_steps": 5,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "Difficulty: hard{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: All line items match: Qty: 1.0 vs 1.0, Price: $49,950 vs $49,950, Total: $53,946 vs $53,946; Vendor SUP-H404 is high-risk but no actual discrepancy; No escalation needed as variances are zero\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.3425
+    ]
+  },
+  {
+    "task_id": "task_h5_retroactive_amendment",
+    "grader_score": 0.27,
+    "cumulative_reward": 0.42000000000000004,
+    "success": false,
+    "n_steps": 5,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: Quantities match across invoice, PO, and GRN; Prices match between billed and PO; No discrepancies detected\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.22000000000000003
+    ]
+  },
+  {
+    "task_id": "task_h6_returned_then_rebilled",
+    "grader_score": 0.9433,
+    "cumulative_reward": 1.1433,
+    "success": true,
+    "n_steps": 4,
+    "terminal_decision": "place_on_hold",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"place_on_hold\", \"exception_type\": \"quantity_mismatch\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\"], \"explanation\": \"Key findings: Billed 100, received 100, but QC rejected 30; net accepted = 70; billed quantity exceeds accepted quantity by 30 units\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.9933000000000001
+    ]
+  },
+  {
+    "task_id": "task_h7_multi_party_pending",
+    "grader_score": 0.7225,
+    "cumulative_reward": 0.9725000000000001,
+    "success": true,
+    "n_steps": 5,
+    "terminal_decision": "escalate_for_supervisor_review",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"inspect_vendor_profile\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"escalate_for_supervisor_review\", \"exception_type\": \"total_amount_mismatch\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"inspect_policy_rules\"], \"explanation\": \"Key findings: Invoice total $91,800 vs PO line total $85,000; Difference: $6,800; PO Amendment 2 approved by CFO overridded original price\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.05,
+      0.7725000000000001
+    ]
+  },
+  {
+    "task_id": "task_h8_rush_premium_authorized",
+    "grader_score": 0.98,
+    "cumulative_reward": 1.1800000000000002,
+    "success": true,
+    "n_steps": 4,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\"], \"explanation\": \"Key findings: Unit price $54 vs base PO price $50 = 8% above base; but both PO and invoice explicitly reference buyer-approved 8% rush surcharge; Surcharge applied concurrently with base price\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      1.03
+    ]
+  },
+  {
+    "task_id": "task_h9_supplier_id_mismatch",
+    "grader_score": 0.41,
+    "cumulative_reward": 0.51,
+    "success": false,
+    "n_steps": 4,
+    "terminal_decision": "approve_for_payment",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"approve_for_payment\", \"exception_type\": \"clean_match\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\"], \"explanation\": \"Key findings: Supplier ID on invoice (SUP-H909-X) differs from PO supplier (SUP-H909) -- but this is a legitimate vendor re-registration; Billed quantity = ordered quantity = received quantity; Billed unit price = PO unit price; No material variance across any dimension\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.36
+    ]
+  },
+  {
+    "task_id": "task_h10_cross_case_contradiction",
+    "grader_score": 0.4383,
+    "cumulative_reward": 0.5383,
+    "success": false,
+    "n_steps": 4,
+    "terminal_decision": "place_on_hold",
+    "actions": [
+      "{\"action_type\": \"inspect_purchase_order\"}",
+      "{\"action_type\": \"inspect_goods_receipt_note\"}",
+      "{\"action_type\": \"inspect_invoice_line_items\"}",
+      "{\"action_type\": \"submit_final_resolution\", \"final_decision\": \"place_on_hold\", \"exception_type\": \"quantity_mismatch\", \"evidence_references\": [\"inspect_purchase_order\", \"inspect_goods_receipt_note\", \"inspect_invoice_line_items\", \"inspect_vendor_profile\", \"compare_quantity\", \"compare_price\", \"compare_totals\", \"check_for_duplicate_invoice\"], \"explanation\": \"Key findings: Billed 100, received 80 -- 20% short; PO requires 100 units; GRN shows only 80 received; variance = 20 units\", \"confidence\": 0.9}"
+    ],
+    "step_rewards": [
+      0.05,
+      0.05,
+      0.05,
+      0.38830000000000003
+    ]
+  }
+]

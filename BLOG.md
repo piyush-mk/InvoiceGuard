@@ -191,6 +191,7 @@ Both submit-focused SFT runs converge quickly, which is exactly what we wanted b
 - **Hub artifacts:**
   - [piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep) (best v5c adapter)
   - [piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best) (best v5d checkpoint)
+  - [HF Job 69ed929cd70108f37acdf80b](https://huggingface.co/jobs/piyush-mk/69ed929cd70108f37acdf80b) (completed all-task adapter evaluation run)
   - [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code) (training scripts)
 - **Live demo webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
 - **Repo artifacts:** `invoice_guard/outputs/training_runs/` includes raw metrics JSONL, summaries, and curves
