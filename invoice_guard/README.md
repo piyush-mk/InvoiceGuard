@@ -1,3 +1,12 @@
+---
+title: InvoiceGuard
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # InvoiceGuard: Three-Way Invoice Matching Environment
 
 An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates accounts payable exception resolution. An AI agent investigates multi-document business cases across invoices, purchase orders, goods receipt notes, vendor profiles, and company policies to detect discrepancies, classify exception types, and render correct decisions.
