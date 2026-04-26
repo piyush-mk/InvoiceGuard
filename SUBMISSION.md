@@ -4,6 +4,7 @@
 **Team / Author:** piyush-mk
 **Repository:** [github.com/piyush-mk/InvoiceGuard](https://github.com/piyush-mk/InvoiceGuard)
 **HF Space:** [huggingface.co/spaces/piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
+**Live Demo Webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
 
 ---
 
@@ -242,6 +243,7 @@ Every item from the hackathon guidelines was explicitly verified.
 | Runs on vcpu=2, memory=8gb | Dockerfile sets `--cpus=2 --memory=8g` |
 | Pre-validation script passes | Checked: `/reset` returns 200, Dockerfile exists, `openenv validate` OK |
 | HF Space is live | [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard) |
+| Public demo webpage is live | [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/) |
 
 ---
 

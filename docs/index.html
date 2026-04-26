@@ -21,16 +21,17 @@
     <main class="container">
       <section class="hero">
         <span class="badge">OpenEnv Round 2 Demo</span>
-        <h1>Train an agent that investigates and actually resolves invoices</h1>
+        <h1>The case starts with uncertainty and ends with a decision</h1>
         <p>
-          This is a fast, static demo site for the project narrative. It shows baseline vs trained
-          behavior, training curves, and links to all artifacts in Hugging Face.
+          InvoiceGuard is a story-driven AP investigation demo. Follow a case from raw documents,
+          through policy checks, to final resolution and see how training changes behavior.
         </p>
         <div class="demo-controls">
           <a class="btn" data-space-link target="_blank" rel="noreferrer">Open Environment Space</a>
           <a class="btn" data-code-link target="_blank" rel="noreferrer">Open Code Repo</a>
           <a class="btn" data-sft-v5c-link target="_blank" rel="noreferrer">Best SFT Adapter (v5c)</a>
           <a class="btn" data-sft-v5d-link target="_blank" rel="noreferrer">Best Checkpoint (v5d)</a>
+          <a class="btn" href="./ASSET_SHOTLIST.md" target="_blank" rel="noreferrer">Image shot list</a>
         </div>
       </section>
 
@@ -54,16 +55,21 @@
       </section>
 
       <section class="section-card">
-        <h2>Interactive behavior demo</h2>
+        <h2>Case narrative demo</h2>
         <p>
-          Click through two representative tasks to compare baseline action loops vs trained
-          resolution behavior.
+          Switch between cases. Each case shows the evidence packet, policy signal, and how the
+          baseline agent differs from the trained policy.
         </p>
         <div class="demo-controls">
           <button id="prevCase">Previous case</button>
           <button id="nextCase">Next case</button>
           <span class="badge" id="caseTitle">Loading...</span>
         </div>
+        <p class="story-hook" id="caseHook"></p>
+        <div class="policy-box">
+          <strong>Policy focus:</strong> <span id="policyRule"></span>
+        </div>
+        <div class="doc-gallery" id="docGallery"></div>
         <p id="caseSummary"></p>
         <div class="split">
           <article class="section-card">
@@ -80,28 +86,20 @@
       </section>
 
       <section class="section-card">
-        <h2>Training curves and evidence</h2>
+        <h2>Why this demo matters</h2>
         <p>
-          Required judging evidence is embedded directly in-repo as static images for reproducible
-          review.
+          The baseline often investigates without closure. The trained policy learns to collect
+          sufficient evidence and submit a grounded decision in fewer steps.
         </p>
-        <div class="img-grid">
-          <figure class="img-card">
-            <img src="./assets/img/sft_eval_grader_score.png" alt="SFT eval grader score curve" />
-            <figcaption class="caption">Grader score moves from baseline-level to 0.70+ during SFT.</figcaption>
-          </figure>
-          <figure class="img-card">
-            <img src="./assets/img/sft_success_rate.png" alt="SFT success rate curve" />
-            <figcaption class="caption">Success rate climbs from 0% to 75% on holdout tasks.</figcaption>
-          </figure>
-          <figure class="img-card">
-            <img src="./assets/img/sft_training_loss.png" alt="SFT training loss curve" />
-            <figcaption class="caption">Loss drops rapidly, showing fast adaptation to submit behavior.</figcaption>
-          </figure>
-          <figure class="img-card">
-            <img src="./assets/img/sft_avg_steps.png" alt="SFT average steps curve" />
-            <figcaption class="caption">Steps reduce from timeout behavior to efficient resolution.</figcaption>
-          </figure>
+        <div class="story-steps">
+          <div class="story-step"><span>1</span><div>Read invoice, PO, GRN, and policy context</div></div>
+          <div class="story-step"><span>2</span><div>Investigate only what changes the decision</div></div>
+          <div class="story-step"><span>3</span><div>Submit `submit_final_resolution` with evidence</div></div>
+          <div class="story-step"><span>4</span><div>Receive deterministic grader score across 6 criteria</div></div>
+        </div>
+        <div class="demo-controls">
+          <a class="btn" href="./tasks.html">Open tasks and scoring breakdown</a>
+          <a class="btn" href="./blog.html">Read full training story</a>
         </div>
       </section>
 

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#0f1633"/>
+  <rect x="26" y="26" width="1148" height="668" rx="14" fill="#121b3d" stroke="#2e3f78"/>
+  <rect x="58" y="58" width="1084" height="604" rx="10" fill="#f8fbff"/>
+  <text x="90" y="104" fill="#17254d" font-size="34" font-family="Segoe UI, Arial" font-weight="700">Invoice INV-88421</text>
+  <text x="90" y="132" fill="#4f5f8f" font-size="18" font-family="Segoe UI, Arial">Vendor: Nexa Components " PO Ref: PO-4478 " Currency: USD</text>
+  <rect x="90" y="150" width="230" height="34" rx="8" fill="#fff4db" stroke="#e7b647"/>
+  <text x="104" y="173" fill="#7a4f00" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Status: Under Review</text>
+  <rect x="90" y="205" width="1020" height="38" fill="#eaf1ff"/>
+  <text x="104" y="230" fill="#31467b" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Item</text>
+  <text x="470" y="230" fill="#31467b" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Qty</text>
+  <text x="610" y="230" fill="#31467b" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Unit Price</text>
+  <text x="830" y="230" fill="#31467b" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Line Total</text>
+  <rect x="90" y="243" width="1020" height="46" fill="#ffffff"/><rect x="90" y="289" width="1020" height="46" fill="#f7faff"/><rect x="90" y="335" width="1020" height="46" fill="#ffffff"/>
+  <text x="104" y="272" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">Precision valve set A-19</text><text x="476" y="272" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">90</text><text x="612" y="272" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">$55.00</text><text x="834" y="272" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">$4,950.00</text>
+  <text x="104" y="318" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">Precision valve set B-21</text><text x="476" y="318" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">90</text><text x="612" y="318" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">$55.00</text><text x="834" y="318" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">$4,950.00</text>
+  <text x="104" y="364" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">Freight handling</text><text x="476" y="364" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">1</text><text x="612" y="364" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">$0.00</text><text x="834" y="364" fill="#1f2d55" font-size="15" font-family="Segoe UI, Arial">$0.00</text>
+  <rect x="90" y="420" width="500" height="190" rx="10" fill="#f4f7ff" stroke="#d5e0ff"/>
+  <text x="110" y="453" fill="#31467b" font-size="16" font-family="Segoe UI, Arial" font-weight="700">Analyst Notes</text>
+  <text x="110" y="484" fill="#4d5f92" font-size="14" font-family="Segoe UI, Arial">Two near-identical invoices from same vendor</text>
+  <text x="110" y="508" fill="#4d5f92" font-size="14" font-family="Segoe UI, Arial">observed in same cycle. Requires policy check</text>
+  <text x="110" y="532" fill="#4d5f92" font-size="14" font-family="Segoe UI, Arial">for threshold-dance behavior.</text>
+  <rect x="610" y="420" width="500" height="190" rx="10" fill="#eef9f2" stroke="#b7e5c8"/>
+  <text x="630" y="453" fill="#245c3e" font-size="16" font-family="Segoe UI, Arial" font-weight="700">Totals</text>
+  <text x="630" y="486" fill="#2f4d3d" font-size="15" font-family="Segoe UI, Arial">Subtotal:</text><text x="980" y="486" fill="#2f4d3d" font-size="15" font-family="Segoe UI, Arial">$9,900.00</text>
+  <text x="630" y="514" fill="#2f4d3d" font-size="15" font-family="Segoe UI, Arial">Tax (0%):</text><text x="980" y="514" fill="#2f4d3d" font-size="15" font-family="Segoe UI, Arial">$0.00</text>
+  <text x="630" y="548" fill="#123f2c" font-size="19" font-family="Segoe UI, Arial" font-weight="700">Grand Total:</text><text x="955" y="548" fill="#123f2c" font-size="19" font-family="Segoe UI, Arial" font-weight="700">$9,900.00</text>
+  <rect x="90" y="620" width="300" height="28" rx="14" fill="#e8f0ff" stroke="#8aa4e6"/>
+  <text x="106" y="639" fill="#2d4684" font-size="13" font-family="Segoe UI, Arial" font-weight="700">Evidence Tag: inspect_invoice_line_items</text>
+</svg>

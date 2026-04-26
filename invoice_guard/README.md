@@ -15,6 +15,9 @@ tags:
 
 An OpenEnv environment that simulates accounts payable exception resolution. An AI agent investigates multi-document business cases -- invoices, purchase orders, goods receipt notes, vendor profiles, and company policies -- to detect discrepancies, classify exception types, and render correct decisions.
 
+**Repository:** [github.com/piyush-mk/InvoiceGuard](https://github.com/piyush-mk/InvoiceGuard)
+**Live Demo Webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
+
 ## Motivation
 
 Three-way invoice matching is one of the most common and error-prone tasks in enterprise finance. Accounts payable teams manually compare invoices against purchase orders and goods receipt notes to detect overbilling, partial shipments, duplicate submissions, and price variances. This environment turns that real-world workflow into a structured evaluation benchmark where an AI agent must gather evidence through sequential investigation actions and reach a correct, policy-compliant decision.

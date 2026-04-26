@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#0f1735"/>
+  <rect x="30" y="30" width="1140" height="660" rx="14" fill="#121d40" stroke="#364f98"/>
+  <rect x="64" y="64" width="1072" height="592" rx="10" fill="#fbfcff"/>
+  <text x="96" y="106" fill="#1a2d5d" font-size="33" font-family="Segoe UI, Arial" font-weight="700">AP Policy: Duplicate Handling</text>
+  <text x="96" y="134" fill="#566ba4" font-size="17" font-family="Segoe UI, Arial">Policy ID AP-POL-07 " Revision 5.1 " Effective 2025-02-10</text>
+  <rect x="96" y="156" width="1040" height="70" rx="10" fill="#e8f8ee" stroke="#67bf89"/>
+  <text x="114" y="186" fill="#2a6b45" font-size="17" font-family="Segoe UI, Arial" font-weight="700">Validated Rule</text>
+  <text x="114" y="210" fill="#2a6b45" font-size="15" font-family="Segoe UI, Arial">Invoice number similarity alone is insufficient for rejection when PO lineage and GRN evidence are valid.</text>
+  <rect x="96" y="252" width="1040" height="350" rx="10" fill="#f4f7ff" stroke="#d5e0ff"/>
+  <text x="118" y="288" fill="#2f4681" font-size="16" font-family="Segoe UI, Arial" font-weight="700">Decision Protocol</text>
+  <text x="118" y="318" fill="#4e639d" font-size="14" font-family="Segoe UI, Arial">1. Run duplicate search on prior invoice IDs.</text>
+  <text x="118" y="342" fill="#4e639d" font-size="14" font-family="Segoe UI, Arial">2. Validate recurring cadence in PO contract terms.</text>
+  <text x="118" y="366" fill="#4e639d" font-size="14" font-family="Segoe UI, Arial">3. Confirm goods receipt period matches current billing cycle.</text>
+  <text x="118" y="390" fill="#4e639d" font-size="14" font-family="Segoe UI, Arial">4. Reject only when lineage mismatch or already-paid same-cycle duplicate is proven.</text>
+  <rect x="118" y="426" width="994" height="154" rx="8" fill="#ffffff" stroke="#dbe4ff"/>
+  <text x="136" y="458" fill="#2f4681" font-size="15" font-family="Segoe UI, Arial" font-weight="700">Example Outcome</text>
+  <text x="136" y="484" fill="#4e639d" font-size="14" font-family="Segoe UI, Arial">INV-33217 resembles INV-33207, but PO-3122 allows monthly recurring invoices.</text>
+  <text x="136" y="508" fill="#4e639d" font-size="14" font-family="Segoe UI, Arial">GRN confirms March delivery. Correct action: approve_for_payment, exception_type=clean_match.</text>
+  <text x="136" y="532" fill="#4e639d" font-size="14" font-family="Segoe UI, Arial">Rejection would be a false positive and policy violation.</text>
+  <rect x="96" y="620" width="250" height="28" rx="14" fill="#e8f0ff" stroke="#8aa4e6"/>
+  <text x="112" y="639" fill="#2d4684" font-size="13" font-family="Segoe UI, Arial" font-weight="700">Evidence Tag: inspect_policy_rules</text>
+  <rect x="356" y="620" width="338" height="28" rx="14" fill="#fff4db" stroke="#e5b854"/>
+  <text x="372" y="639" fill="#7a4f00" font-size="13" font-family="Segoe UI, Arial" font-weight="700">Resolution Tag: submit_final_resolution</text>
+</svg>
