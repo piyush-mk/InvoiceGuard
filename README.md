@@ -2,13 +2,12 @@
 
 An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates accounts payable exception resolution. An AI agent investigates multi-document business cases across invoices, purchase orders, goods receipt notes, vendor profiles, and company policies to detect discrepancies, classify exception types, and render correct decisions.
 
-**Hugging Face Space:** [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
-**Hugging Face Code Repo:** [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code)
-**HF Space Blog (separate MD):** [piyush-mk/invoice-guard/blob/main/BLOG.md](https://huggingface.co/spaces/piyush-mk/invoice-guard/blob/main/BLOG.md)
-**Live Demo Webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
-**Public Colab Notebook (runnable):** [InvoiceGuard_Round2_GRPO_Reproducibility.ipynb](https://colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb)
-**Static Demo UI (GitHub Pages source):** `docs/`
-**YouTube Demo Video:** `Add public URL before final submission`
+- **Hugging Face Space:** [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
+- **Hugging Face Code Repo:** [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code)
+- **HF Space Blog (separate MD):** [piyush-mk/invoice-guard/blob/main/BLOG.md](https://huggingface.co/spaces/piyush-mk/invoice-guard/blob/main/BLOG.md)
+- **Website:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
+- **Public Colab Notebook (runnable):** [InvoiceGuard_Round2_GRPO_Reproducibility.ipynb](https://colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb)
+- **YouTube Demo Video:** `Add public URL before final submission`
 
 ## Problem Statement and Hackathon Theme
 
