@@ -1,198 +1,156 @@
-# InvoiceGuard: Teaching a 4B Model to Resolve Invoice Exceptions
+# InvoiceGuard: How I Trained a 4B Model for AP Exception Resolution
 
 Live demo webpage: [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
 
-## The Problem
+## Why I Built This
 
-Three-way invoice matching is one of the most repetitive and error-prone workflows in enterprise finance. Teams have to compare invoices, purchase orders, and goods receipts, then make policy-compliant decisions quickly.
+I built InvoiceGuard to model a real enterprise workflow: three-way invoice matching in accounts payable. In this workflow, a reviewer must check invoices against POs, GRNs, vendor risk signals, and internal policy before deciding whether to approve, hold, reject, or escalate.
 
-We built InvoiceGuard as an OpenEnv environment with 22 tasks, from simple clean matches to tricky fraud-like patterns such as split invoices and correction traps. The real challenge was not just formatting JSON actions. It was teaching an open-weight model to investigate, decide, and finish the episode with a correct final resolution.
+I chose this because it is practical, high impact, and naturally agentic. A model cannot solve it with one-shot pattern matching. It has to investigate, compare evidence, and then commit to a final decision.
 
-## The Baseline Reality Check
+## How I Built the Environment
 
-At first glance, Qwen3-4B looked strong. Through Hugging Face Router it scored **0.83** on canonical tasks and **0.75** on hard tasks, close to GPT-4o on our benchmark slice.
+I implemented InvoiceGuard as an OpenEnv environment with 22 tasks (12 canonical + 10 hard variants). I designed the tasks to cover both straightforward cases and deceptive traps like split-invoice behavior, false duplicate signals, and retroactive policy edge cases.
 
-But local training told a different story. When we loaded the same model under our training constraints (bf16, prompt limits, adapter flow), it collapsed to **0.137**. It could investigate well, but it almost never finished with `submit_final_resolution`.
+Each episode gives the agent a step budget and a structured action space:
+- inspection actions (`inspect_purchase_order`, `inspect_goods_receipt_note`, etc.),
+- comparison actions (`compare_price`, `compare_quantity`, `compare_totals`),
+- and a terminal action: `submit_final_resolution`.
 
-That gave us the core goal for Round 2: close the gap between local untrained behavior and usable trained behavior.
+The grader is deterministic and scores six dimensions: decision correctness, exception type, evidence quality, investigation quality, explanation quality, and efficiency.
 
-## The First Wave of Failures
+## Baselines: The First Surprise
 
-### Attempt 1: Full-Trace SFT in 4-bit
+My API baselines looked strong. Qwen3-4B via router reached around `0.83` on canonical and `0.75` on hard slices.
 
-We started with the obvious recipe: expert traces with 9 investigation actions plus 1 submit action, then LoRA SFT on top.
+But my local training baseline was very different: under my real training constraints, the same model dropped to `0.137`. It investigated correctly but almost never submitted a final resolution. That became my Round 2 target: teach the model to conclude.
 
-Result: **0.155**, 0% success, almost no meaningful completion behavior.
+## What Failed First
 
-Two root causes appeared quickly:
-1. 4-bit quantization was harming decision quality even though we had enough VRAM.
-2. The dataset was heavily imbalanced toward investigation actions, so the model learned to keep investigating forever.
+### Full-Trace SFT (4-bit, then bf16)
 
-### Attempt 2: Full-Trace SFT in bf16
+I started with full expert traces and standard LoRA SFT. It did not work:
+- 4-bit full-trace SFT stayed near `0.155`.
+- bf16 full-trace SFT also stayed near `0.155`.
 
-We removed quantization, added variable trace lengths, and upweighted submit loss.
+The pattern was clear in rollouts: the model learned to keep investigating because most training tokens were investigation actions, not resolution actions.
 
-Result: still **0.155** and still 0% success.
+### Early GRPO
 
-This was the key lesson: if most gradients reward investigation patterns, the model keeps investigating even when it should conclude.
+I then tried GRPO too early. I hit low-variance trajectory batches (`group_reward_std=0.0`) and weak policy updates. The model still did not reliably learn completion behavior.
 
-### Attempt 3: GRPO from Warmup
+## The Turning Point: Submit-Focused SFT
 
-We then moved to GRPO expecting exploration to fix this.
+I reframed the problem: the model already knew how to investigate, but it lacked termination behavior. So I trained submit behavior directly.
 
-Result: `group_reward_std=0.0` and effectively no learning signal because sampled trajectories were too similar.
+### Submit-only SFT (v5b)
 
-So we paused and reframed the problem.
+This gave the first meaningful jump:
 
-## The Breakthrough
-
-We asked a simpler question: what if the model already knows how to investigate, and only lacks the skill of deciding when to submit?
-
-That was exactly what the logs showed. The model could produce clean investigation actions, but it struggled to end the loop correctly.
-
-So we switched to **submit-only SFT**.
-
-### v5b: Submit-only on All Trace Lengths
-
-We kept only submit examples (72 total) and trained for resolution behavior.
-
-| Epoch | Score | Success Rate |
-|-------|-------|-------------|
-| 1 | **0.650** | 50% |
+| Epoch | Score | Success |
+|------|------|---------|
+| 1 | 0.650 | 50% |
 | 2 | 0.625 | 50% |
-| 5 | 0.381 | 25% |
 | 10 | 0.518 | 50% |
 
-This was the first real jump, but the model sometimes submitted too early.
+It improved behavior, but still submitted early in some trajectories.
 
-### v5c: Submit-only with Deep Context (min 7 investigation steps)
+### Submit-only SFT with deeper context (v5c)
 
-We filtered to submit examples that came after deeper investigation context.
+I filtered training examples so submission examples came after deeper investigations. This was the breakthrough:
 
-| Epoch | Score | Success Rate | Avg Steps |
-|-------|-------|-------------|-----------|
-| 1 | 0.168 | 0% | 9.5 |
-| 2 | 0.125 | 0% | 12.0 |
-| 3 | 0.672 | 50% | 2.0 |
-| **6** | **0.727** | **75%** | **3.0** |
-| 8 | 0.724 | 75% | 3.0 |
-| **13** | **0.729** | **75%** | **3.0** |
+| Best epoch | Score | Success | Avg steps |
+|-----------|-------|---------|-----------|
+| 13 | **0.729** | **75%** | **3.0** |
 
-This is where things clicked. The model started investigating briefly and then submitting decisions that actually resolved tasks.
+### Best-checkpoint SFT (v5d)
 
-### v5d: Best-epoch checkpointing
+I added explicit best-checkpoint saving and got:
 
-Same core strategy, plus explicit best-checkpoint saving.
+| Best epoch | Score | Success |
+|-----------|-------|---------|
+| 9 | 0.704 | 75% |
 
-| Metric | Value |
-|--------|-------|
-| Best epoch | 9 |
-| Best score | 0.704 |
-| Success rate | 75% |
-| Saved to | `piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best` |
+This produced a stable checkpointed SFT variant for warm-start RL.
 
-## Important Bugs We Fixed
+## SFT + GRPO
 
-1. **Missing EOS token during SFT completion training**  
-   Without `<|im_end|>`, generation often continued past valid JSON and broke parsing.
+From the best SFT checkpoint, I ran warm-started GRPO (`v6c-stable`):
+- warm-start init: `0.704`
+- best checkpoint (iter2): `0.775`
+- final iter3: `0.720`
 
-2. **Qwen3 thinking blocks in output**  
-   We disabled thinking mode and stripped residual blocks to protect token budget and parser stability.
+This confirmed two practical lessons for this environment:
+1. warm-started RL can improve reward quality on top of SFT,
+2. best checkpoint selection matters more than taking the final iteration by default.
 
-3. **Fragile JSON extraction**  
-   We added `_extract_first_json_object()` to safely parse the first valid JSON object.
+I also found that iteration speed mattered more than chasing bigger models. Working with a 4B model let me run many cycles, inspect failures quickly, and fix the reward and termination behavior step by step. In practice, compute budgeting and stable QLoRA-style training constraints were more useful than trying to stretch to larger models with fewer successful runs.
 
-4. **`n_pairs=0` style GRPO failure mode**  
-   We made advantage handling robust even when variance is near zero.
+## Key Bugs I Had to Fix
 
-5. **HF Jobs script argument limits**  
-   We switched to running scripts by Hub URL to avoid command size issues.
+1. **Missing EOS token in SFT targets** (`<|im_end|>`) caused generation spillover and parser failure.
+2. **Qwen thinking blocks** consumed generation budget and interfered with stable action extraction.
+3. **JSON extraction fragility** required robust first-object parsing.
+4. **GRPO numerical instability** needed stable ratio handling and finite-loss guards.
+5. **HF job/runtime plumbing issues** required script and secret handling hardening.
 
-## Final Numbers
+Without these fixes, training quality looked randomly bad even when the core idea was correct.
 
-| Configuration | Score | Success | vs Local Base |
-|--------------|-------|---------|---------------|
-| Local base (no training) | 0.137 | 0% | — |
-| SFT v5c (best epoch) | 0.729 | 75% | **5.3× improvement** |
-| SFT v5d (best checkpoint) | 0.704 | 75% | **5.1× improvement** |
-| GRPO v6c (warm-start init) | 0.704 | 75% | **5.1× improvement** |
-| GRPO v6c (best iter2) | 0.775 | 75% | **5.6× improvement** |
-| GRPO v6c (final iter3) | 0.720 | 75% | **5.2× improvement** |
-| API baseline (for reference) | 0.827 | — | — |
+## Final Snapshot
 
-The trained model closes roughly 86% of the local-to-cloud gap:
-`(0.729 - 0.137) / (0.827 - 0.137) = 85.8%`.
+| Configuration | Score | Success |
+|--------------|-------|---------|
+| Local baseline (no training) | 0.137 | 0% |
+| Best SFT (v5c) | 0.729 | 75% |
+| Best GRPO checkpoint (v6c iter2) | 0.775 | 75% |
 
-With warm-started GRPO, the best checkpoint closes about 92.5% of that gap:
-`(0.775 - 0.137) / (0.827 - 0.137) = 92.5%`.
+From local baseline to best SFT, I got about **5.3x** score improvement. Warm-started GRPO improved that further at its best checkpoint.
 
-## Training Curves
+## Curves and Evidence
 
-### End to End Progression (Baseline → SFT → GRPO)
-
+### End-to-End Progression
 ![Round 2 Progression Score](./invoice_guard/outputs/training_runs/round2_progression_eval_score.png)
 
-This view combines all stages into one timeline: local baseline at 0.137, SFT in the 0.70 range, then warm-started GRPO peaking at 0.775 before ending at 0.720.
-
-### Stage Snapshot (Score, Success, Steps)
-
+### Stage Comparison
 ![Round 2 Stage Comparison](./invoice_guard/outputs/training_runs/round2_stage_comparison.png)
 
-This summarizes where each stage lands on holdout tasks, including the fact that GRPO best is better than GRPO final.
-
-### Eval Grader Score Over Epochs
-
+### SFT Eval Score
 ![Eval Grader Score](./invoice_guard/outputs/training_runs/sft_eval_grader_score.png)
 
-Both v5c and v5d start near baseline and then jump sharply once submit behavior is learned. The fluctuations are expected with a compact dataset.
-
-### Training Loss
-
+### SFT Training Loss
 ![Training Loss](./invoice_guard/outputs/training_runs/sft_training_loss.png)
 
-Loss falls quickly from around 8 to below 0.1, indicating fast adaptation to the target behavior.
-
-### Task Success Rate
-
+### SFT Success Rate
 ![Success Rate](./invoice_guard/outputs/training_runs/sft_success_rate.png)
 
-Success rises from 0% to 50-75%, which is the strongest behavioral evidence that the model learned something real.
-
-### Steps to Resolution
-
+### Average Steps
 ![Average Steps](./invoice_guard/outputs/training_runs/sft_avg_steps.png)
 
-The untrained model times out at 12 steps. Trained models usually resolve in 3-5 steps after focused investigation.
-
-### GRPO Training Signals
-
+### GRPO Signals
 ![GRPO Training Signals](./invoice_guard/outputs/training_runs/round2_grpo_training_signals.png)
 
-Reward and grader trends are strong overall, but we still see occasional instability pockets on specific tasks.
-
 ### GRPO Loss Components
-
 ![GRPO Loss Components](./invoice_guard/outputs/training_runs/round2_grpo_loss_components_log.png)
 
-Loss decomposition shows highly variable policy loss with relatively small KL loss, which explains why the best GRPO checkpoint appears before the final one.
+## Conclusion
 
-### SFT Loss Curves (Log Scale)
+I started with a good environment and strong API baselines, but my local trainable setup exposed a major behavior gap: the model investigated but did not finish. The core win was not a bigger model or more compute. The core win was changing the training objective to target the missing behavior (`submit_final_resolution`) and fixing pipeline-level bugs that were masking real progress.
 
-![SFT Loss Log](./invoice_guard/outputs/training_runs/round2_sft_training_loss_log.png)
+InvoiceGuard now demonstrates the full story I wanted: realistic enterprise tasks, deterministic grading, measurable post-training gains, and reproducible artifacts.
 
-Both submit-focused SFT runs converge quickly, which is exactly what we wanted before handing off to GRPO.
+## What I Would Change Next
 
-## Infrastructure and Artifacts
+If I had one more iteration cycle, I would:
+- add adaptive checkpoint selection during GRPO (automatic early-stop on holdout regression),
+- expand hard-task curriculum during SFT before RL,
+- add uncertainty-aware submission behavior (confidence calibration),
+- increase cross-case memory signals for split-invoice and identity-mismatch families,
+- and publish a larger all-task adapter eval sweep for every saved checkpoint.
 
-- **Training hardware:** Hugging Face Jobs, L40S GPU (48GB VRAM)
-- **Run duration:** about 15 minutes for submit-only SFT (15 epochs x 36 examples)
-- **Approx cost:** around $0.75 per successful run
-- **Total runs:** 30+ across iterations
-- **Hub artifacts:**
-  - [piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep) (best v5c adapter)
-  - [piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best) (best v5d checkpoint)
-  - [HF Job 69ed929cd70108f37acdf80b](https://huggingface.co/jobs/piyush-mk/69ed929cd70108f37acdf80b) (completed all-task adapter evaluation run)
-  - [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code) (training scripts)
-- **Live demo webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
-- **Repo artifacts:** `invoice_guard/outputs/training_runs/` includes raw metrics JSONL, summaries, and curves
-- **Baseline files:** `invoice_guard/outputs/baseline_scores/` includes local and API per-task evaluation traces
+## Artifacts and Links
+
+- HF Space: [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
+- Training code: [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code)
+- Best SFT checkpoint: [piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best)
+- Completed all-task adapter eval run: [HF Job 69ed929cd70108f37acdf80b](https://huggingface.co/jobs/piyush-mk/69ed929cd70108f37acdf80b)
+- Repo outputs: `invoice_guard/outputs/training_runs/` and `invoice_guard/outputs/job_reports/`
