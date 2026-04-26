@@ -84,6 +84,8 @@ This confirmed two practical lessons for this environment:
 1. warm-started RL can improve reward quality on top of SFT,
 2. best checkpoint selection matters more than taking the final iteration by default.
 
+I also found that iteration speed mattered more than chasing bigger models. Working with a 4B model let me run many cycles, inspect failures quickly, and fix the reward and termination behavior step by step. In practice, compute budgeting and stable QLoRA-style training constraints were more useful than trying to stretch to larger models with fewer successful runs.
+
 ## Key Bugs I Had to Fix
 
 1. **Missing EOS token in SFT targets** (`<|im_end|>`) caused generation spillover and parser failure.

@@ -215,52 +215,52 @@ The same Qwen3-4B model that scores **0.83** via cloud API scores just **0.137**
 
 #### Baseline → SFT → GRPO Score Progression
 
-![Round 2 Progression Score](./invoice_guard/outputs/training_runs/round2_progression_eval_score.png)
+![Round 2 Progression Score](./outputs/training_runs/round2_progression_eval_score.png)
 This is the end to end trajectory: local baseline starts at 0.137, SFT raises quality to 0.70 plus, then warm-started GRPO peaks at 0.775 on holdout eval.
 
 #### Round 2 Stage Snapshot
 
-![Round 2 Stage Comparison](./invoice_guard/outputs/training_runs/round2_stage_comparison.png)
+![Round 2 Stage Comparison](./outputs/training_runs/round2_stage_comparison.png)
 This summary compares score, success rate, and step efficiency across local baseline, best SFT stage, and warm-started GRPO checkpoints.
 
 #### Grader Score Over Epochs
 
-![Eval Grader Score](./invoice_guard/outputs/training_runs/sft_eval_grader_score.png)
+![Eval Grader Score](./outputs/training_runs/sft_eval_grader_score.png)
 This curve is the main improvement story: both runs start near baseline (~0.14), jump sharply by epoch 3, and peak near 0.70-0.73.
 
 #### Training Loss
 
-![Training Loss](./invoice_guard/outputs/training_runs/sft_training_loss.png)
+![Training Loss](./outputs/training_runs/sft_training_loss.png)
 Loss falls quickly from ~8 to <0.1, showing the submit-focused behavior is learned fast on this compact dataset.
 
 #### Task Success Rate
 
-![Success Rate](./invoice_guard/outputs/training_runs/sft_success_rate.png)
+![Success Rate](./outputs/training_runs/sft_success_rate.png)
 Success rate moves from 0% to 50-75%, which is the clearest behavioral shift versus baseline.
 
 #### Investigation Steps to Resolution
 
-![Avg Steps](./invoice_guard/outputs/training_runs/sft_avg_steps.png)
+![Avg Steps](./outputs/training_runs/sft_avg_steps.png)
 Average steps drop from timeout-level behavior (12) to focused resolution behavior (3-5 steps).
 
 #### Summary Comparison
 
-![Comparison Summary](./invoice_guard/outputs/training_runs/sft_comparison_summary.png)
+![Comparison Summary](./outputs/training_runs/sft_comparison_summary.png)
 One-page comparison of baseline vs trained checkpoints across score, success rate, and decision efficiency.
 
 #### GRPO Training Signals
 
-![GRPO Training Signals](./invoice_guard/outputs/training_runs/round2_grpo_training_signals.png)
+![GRPO Training Signals](./outputs/training_runs/round2_grpo_training_signals.png)
 During GRPO updates, group reward and grader quality stay high overall, but instability on a few tasks creates non-monotonic progress.
 
 #### GRPO Loss Components (Log Scale)
 
-![GRPO Loss Components](./invoice_guard/outputs/training_runs/round2_grpo_loss_components_log.png)
+![GRPO Loss Components](./outputs/training_runs/round2_grpo_loss_components_log.png)
 Policy loss dominates and fluctuates heavily, while KL remains much smaller; this explains why iter2 is best and iter3 regresses.
 
 #### SFT Loss Curves (Log Scale)
 
-![SFT Loss Curves Log](./invoice_guard/outputs/training_runs/round2_sft_training_loss_log.png)
+![SFT Loss Curves Log](./outputs/training_runs/round2_sft_training_loss_log.png)
 Both SFT runs show fast convergence from high initial loss to low stable loss, matching the rapid behavior shift to proper submission.
 
 ### What Worked: Submit-Focused SFT

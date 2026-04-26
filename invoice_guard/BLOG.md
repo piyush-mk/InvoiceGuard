@@ -84,6 +84,8 @@ This confirmed two practical lessons for this environment:
 1. warm-started RL can improve reward quality on top of SFT,
 2. best checkpoint selection matters more than taking the final iteration by default.
 
+I also found that iteration speed mattered more than chasing bigger models. Working with a 4B model let me run many cycles, inspect failures quickly, and fix the reward and termination behavior step by step. In practice, compute budgeting and stable QLoRA-style training constraints were more useful than trying to stretch to larger models with fewer successful runs.
+
 ## Key Bugs I Had to Fix
 
 1. **Missing EOS token in SFT targets** (`<|im_end|>`) caused generation spillover and parser failure.
@@ -107,28 +109,28 @@ From local baseline to best SFT, I got about **5.3x** score improvement. Warm-st
 ## Curves and Evidence
 
 ### End-to-End Progression
-![Round 2 Progression Score](./invoice_guard/outputs/training_runs/round2_progression_eval_score.png)
+![Round 2 Progression Score](./outputs/training_runs/round2_progression_eval_score.png)
 
 ### Stage Comparison
-![Round 2 Stage Comparison](./invoice_guard/outputs/training_runs/round2_stage_comparison.png)
+![Round 2 Stage Comparison](./outputs/training_runs/round2_stage_comparison.png)
 
 ### SFT Eval Score
-![Eval Grader Score](./invoice_guard/outputs/training_runs/sft_eval_grader_score.png)
+![Eval Grader Score](./outputs/training_runs/sft_eval_grader_score.png)
 
 ### SFT Training Loss
-![Training Loss](./invoice_guard/outputs/training_runs/sft_training_loss.png)
+![Training Loss](./outputs/training_runs/sft_training_loss.png)
 
 ### SFT Success Rate
-![Success Rate](./invoice_guard/outputs/training_runs/sft_success_rate.png)
+![Success Rate](./outputs/training_runs/sft_success_rate.png)
 
 ### Average Steps
-![Average Steps](./invoice_guard/outputs/training_runs/sft_avg_steps.png)
+![Average Steps](./outputs/training_runs/sft_avg_steps.png)
 
 ### GRPO Signals
-![GRPO Training Signals](./invoice_guard/outputs/training_runs/round2_grpo_training_signals.png)
+![GRPO Training Signals](./outputs/training_runs/round2_grpo_training_signals.png)
 
 ### GRPO Loss Components
-![GRPO Loss Components](./invoice_guard/outputs/training_runs/round2_grpo_loss_components_log.png)
+![GRPO Loss Components](./outputs/training_runs/round2_grpo_loss_components_log.png)
 
 ## Conclusion
 
