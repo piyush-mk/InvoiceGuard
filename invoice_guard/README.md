@@ -14,7 +14,6 @@ An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates
 **Hugging Face Space:** [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
 **Hugging Face Code Repo:** [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code)
 **HF Space Blog (separate MD):** [piyush-mk/invoice-guard/blob/main/BLOG.md](https://huggingface.co/spaces/piyush-mk/invoice-guard/blob/main/BLOG.md)
-**GitHub Blog (full writeup):** [piyush-mk/InvoiceGuard/BLOG.md](https://github.com/piyush-mk/InvoiceGuard/blob/main/BLOG.md)
 **Live Demo Webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
 **Public Colab Notebook (runnable):** [InvoiceGuard_Round2_GRPO_Reproducibility.ipynb](https://colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb)
 **Static Demo UI (GitHub Pages source):** `docs/`
