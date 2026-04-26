@@ -1,33 +1,23 @@
----
-title: Invoice Guard Environment Server
-emoji: 📋
-colorFrom: purple
-colorTo: yellow
-sdk: docker
-pinned: false
-app_port: 8000
-base_path: /web
-tags:
-  - openenv
----
+# InvoiceGuard: Three-Way Invoice Matching Environment
 
-# InvoiceGuard -- Three-Way Invoice Matching Environment
+An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates accounts payable exception resolution. An AI agent investigates multi-document business cases across invoices, purchase orders, goods receipt notes, vendor profiles, and company policies to detect discrepancies, classify exception types, and render correct decisions.
 
-An OpenEnv environment that simulates accounts payable exception resolution. An AI agent investigates multi-document business cases -- invoices, purchase orders, goods receipt notes, vendor profiles, and company policies -- to detect discrepancies, classify exception types, and render correct decisions.
-
-**Repository:** [github.com/piyush-mk/InvoiceGuard](https://github.com/piyush-mk/InvoiceGuard)
+**Hugging Face Space:** [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
+**Hugging Face Code Repo:** [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code)
+**HF Space Blog (separate MD):** [piyush-mk/invoice-guard/blob/main/BLOG.md](https://huggingface.co/spaces/piyush-mk/invoice-guard/blob/main/BLOG.md)
 **Live Demo Webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
-**Hackathon Blog (separate file):** [`BLOG.md`](./BLOG.md)
+**Public Colab Notebook (runnable):** [InvoiceGuard_Round2_GRPO_Reproducibility.ipynb](https://colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb)
+**Static Demo UI (GitHub Pages source):** `docs/`
 
-## Problem Statement and Theme Alignment
+## Problem Statement and Hackathon Theme
 
-**Problem statement:** Train an LLM agent to resolve enterprise AP exceptions by investigating invoice, PO, GRN, vendor, and policy evidence and then submitting a policy-grounded final decision.
+**Problem statement:** Build an OpenEnv environment where an LLM agent can reliably resolve real-world accounts payable exceptions by reading multi-document evidence (invoice, PO, GRN, vendor profile, policy), selecting investigation tools, and submitting a correct policy-compliant final resolution.
 
-**Primary hackathon theme:** **Theme #3.1 Professional Tasks (World Modeling)**  
-This environment models a realistic professional workflow with tool interactions, stateful investigation, and deterministic reward/grade feedback.
+**Primary theme alignment:** **Theme #3.1 Professional Tasks (World Modeling)**  
+InvoiceGuard is an enterprise workflow simulation with partial observability, tool-based investigation, deterministic grading, and dynamic exception patterns designed for post-training improvement.
 
-**Secondary theme:** **Theme #2 Long-Horizon Planning & Instruction Following**  
-The agent must plan multi-step investigation sequences and decide when to conclude with `submit_final_resolution`.
+**Secondary theme alignment:** **Theme #2 Long-Horizon Planning & Instruction Following**  
+Episodes require multi-step evidence gathering, action sequencing, and deliberate completion behavior (`submit_final_resolution`) under a step budget.
 
 ## Motivation
 
@@ -45,12 +35,14 @@ Three-way invoice matching is one of the most common and error-prone tasks in en
 | `task_6_false_positive_duplicate` | Invoice looks like a duplicate but is a legitimate recurring order for a different PO | Hard | `approve_for_payment` | `clean_match` |
 | `task_7_retroactive_price` | Vendor applied a price increase retroactively; PO predates the effective date | Hard | `escalate_for_supervisor_review` | `price_mismatch` |
 | `task_8_split_invoice_pattern` | Supplier splits large order into sub-threshold invoices to dodge auto-approval | Hard | `escalate_for_supervisor_review` | `policy_violation` |
-| `task_9_clean_from_risky_vendor` | Clean invoice from high-risk vendor with 5 prior incidents -- false-positive trap | Hard | `approve_for_payment` | `clean_match` |
-| `task_10_rounding_false_alarm` | Invoice total off by $0.01 due to line-item rounding -- all else matches perfectly | Hard | `approve_for_payment` | `clean_match` |
+| `task_9_clean_from_risky_vendor` | Clean invoice from high-risk vendor with 5 prior incidents, a false-positive trap | Hard | `approve_for_payment` | `clean_match` |
+| `task_10_rounding_false_alarm` | Invoice total off by $0.01 due to line-item rounding, while everything else matches | Hard | `approve_for_payment` | `clean_match` |
 | `task_11_authorized_overship` | GRN shows 110 received vs 100 ordered, but PO amendment authorized 10% overship | Hard | `approve_for_payment` | `clean_match` |
 | `task_12_corrected_resubmission` | Corrected invoice (INV-R1) looks like a duplicate of rejected original | Hard | `approve_for_payment` | `clean_match` |
 
 Each task includes fully synthetic business documents with deterministic ground truth and a multi-criteria grader. Tasks 5-8 test ambiguity, temporal reasoning, and cross-case pattern detection. Tasks 9-12 are false-positive traps where surface signals mislead toward rejection but deeper investigation reveals the correct answer is approval.
+
+In addition to the 12 canonical tasks, there are 10 hard variant tasks (22 total) covering edge cases like phantom GRN periods, kickback-inflated POs, currency swaps, threshold dances, retroactive amendments, returned-then-rebilled items, multi-party holds, rush premiums, supplier ID mismatches, and cross-case contradictions.
 
 ## Action Space
 
@@ -160,6 +152,184 @@ Episodes are scored by a deterministic grader on six weighted criteria (total = 
 | `reject_invoice` | Duplicate invoice or fraudulent submission |
 | `escalate_for_supervisor_review` | Price/total variance exceeds tolerance, high-value invoice |
 
+---
+
+## Baseline Scores
+
+### API Baselines: Canonical Tasks (12 tasks)
+
+| Model | Type | Avg Score | Decision Correct Rate |
+|-------|------|-----------|----------------------|
+| **gpt-4o** | API | **0.95** | 100% |
+| **gpt-4.1-mini** | API | **0.89** | 92% |
+| **gpt-5.1** | API | **0.83** | 83% |
+| **Qwen3-4B-Instruct-2507** | Open-weight | **0.83** | 83% |
+| **Qwen2.5-7B-Instruct** | Open-weight | **0.70** | 58% |
+
+### API Baselines: Hard Tasks (10 tasks)
+
+| Model | Type | Avg Score | Decision Correct Rate |
+|-------|------|-----------|----------------------|
+| **gpt-5.1** | API | **0.76** | 70% |
+| **Qwen3-4B-Instruct-2507** | Open-weight | **0.75** | 70% |
+| **gpt-4.1-mini** | API | **0.74** | 70% |
+| **Qwen2.5-7B-Instruct** | Open-weight | **0.66** | 50% |
+| **gpt-4o** | API | **0.67** | 60% |
+
+The hard tasks are designed with a strong performance gap (~40-55% on the worst tasks). Even gpt-4o drops to 0.67 on the hard slice, confirming the tasks meaningfully challenge frontier models.
+
+Full per-task breakdowns are in `invoice_guard/outputs/baseline_scores/` and `invoice_guard/outputs/round2/`.
+
+---
+
+## Round 2: Training an Open-Weight Agent
+
+### The Gap
+
+The same Qwen3-4B model that scores **0.83** via cloud API scores just **0.137** when loaded locally for training. Under local inference constraints (bf16, 2048 token prompt, LoRA adapter), the base model generates valid investigation JSON but never produces `submit_final_resolution`. It exhausts all 12 steps investigating without concluding.
+
+### Trained Model Results
+
+| Model | Grader Score | Success Rate | Avg Steps | Submits? |
+|-------|-------------|-------------|-----------|----------|
+| Local baseline (no training) | 0.137 | 0% | 12.0 | Never |
+| SFT v5c (best epoch 13) | **0.729** | **75%** | 3.0 | Yes |
+| SFT v5d (best epoch 9) | **0.704** | **75%** | 4.25 | Yes |
+| GRPO v6c (warm-start init) | 0.704 | 75% | 4.25 | Yes |
+| GRPO v6c (best iter2) | **0.775** | **75%** | 4.50 | Yes |
+| GRPO v6c (final iter3) | 0.720 | 75% | 4.50 | Yes |
+| API baseline (for reference) | 0.827 | — | — | Yes |
+
+**5.3x improvement** over the untrained local baseline. The trained model closes 86% of the gap between untrained local (0.137) and cloud API (0.827).
+
+### Training Curves
+
+#### Baseline → SFT → GRPO Score Progression
+
+![Round 2 Progression Score](./invoice_guard/outputs/training_runs/round2_progression_eval_score.png)
+This is the end to end trajectory: local baseline starts at 0.137, SFT raises quality to 0.70 plus, then warm-started GRPO peaks at 0.775 on holdout eval.
+
+#### Round 2 Stage Snapshot
+
+![Round 2 Stage Comparison](./invoice_guard/outputs/training_runs/round2_stage_comparison.png)
+This summary compares score, success rate, and step efficiency across local baseline, best SFT stage, and warm-started GRPO checkpoints.
+
+#### Grader Score Over Epochs
+
+![Eval Grader Score](./invoice_guard/outputs/training_runs/sft_eval_grader_score.png)
+This curve is the main improvement story: both runs start near baseline (~0.14), jump sharply by epoch 3, and peak near 0.70-0.73.
+
+#### Training Loss
+
+![Training Loss](./invoice_guard/outputs/training_runs/sft_training_loss.png)
+Loss falls quickly from ~8 to <0.1, showing the submit-focused behavior is learned fast on this compact dataset.
+
+#### Task Success Rate
+
+![Success Rate](./invoice_guard/outputs/training_runs/sft_success_rate.png)
+Success rate moves from 0% to 50-75%, which is the clearest behavioral shift versus baseline.
+
+#### Investigation Steps to Resolution
+
+![Avg Steps](./invoice_guard/outputs/training_runs/sft_avg_steps.png)
+Average steps drop from timeout-level behavior (12) to focused resolution behavior (3-5 steps).
+
+#### Summary Comparison
+
+![Comparison Summary](./invoice_guard/outputs/training_runs/sft_comparison_summary.png)
+One-page comparison of baseline vs trained checkpoints across score, success rate, and decision efficiency.
+
+#### GRPO Training Signals
+
+![GRPO Training Signals](./invoice_guard/outputs/training_runs/round2_grpo_training_signals.png)
+During GRPO updates, group reward and grader quality stay high overall, but instability on a few tasks creates non-monotonic progress.
+
+#### GRPO Loss Components (Log Scale)
+
+![GRPO Loss Components](./invoice_guard/outputs/training_runs/round2_grpo_loss_components_log.png)
+Policy loss dominates and fluctuates heavily, while KL remains much smaller; this explains why iter2 is best and iter3 regresses.
+
+#### SFT Loss Curves (Log Scale)
+
+![SFT Loss Curves Log](./invoice_guard/outputs/training_runs/round2_sft_training_loss_log.png)
+Both SFT runs show fast convergence from high initial loss to low stable loss, matching the rapid behavior shift to proper submission.
+
+### What Worked: Submit-Focused SFT
+
+Standard SFT on full expert traces failed because the model memorized investigation actions (90% of training data) and never learned to submit. Our breakthrough was **submit-only SFT**: training exclusively on `submit_final_resolution` examples with full conversation context.
+
+| Technique | Score | Why |
+|-----------|-------|-----|
+| Full-trace SFT (4-bit) | 0.155 | 4-bit quantization destroys reasoning |
+| Full-trace SFT (bf16) | 0.155 | Model overfits to investigation pattern |
+| Submit-only SFT (all traces) | 0.650 | Learns to submit but too early |
+| **Submit-only SFT (min 7 inv. steps)** | **0.729** | **Learns to investigate THEN submit** |
+
+The base model already knows how to investigate. Training on investigation examples degrades that ability. Training only on submit examples adds the missing skill (knowing when to conclude) without degrading existing capabilities.
+
+### What GRPO Added After SFT Warm-Start
+
+GRPO was run from the best SFT adapter (`invoiceguard-qwen3-4b-sft-v5d-submit-deep-best`) with no format warmup. This preserved the submission behavior and improved holdout score from `0.7038` (init) to `0.7750` (iter2), then settled at `0.7200` by iter3.
+
+The run demonstrates a practical pattern for this environment:
+- SFT establishes the critical submit behavior and stable JSON policy.
+- Warm-started GRPO can improve reward quality on top of SFT.
+- The best GRPO checkpoint is not always the final one, so checkpoint selection by holdout score is required.
+
+### Training Configuration
+
+- **Base model:** Qwen/Qwen3-4B-Instruct-2507
+- **Precision:** bf16 (NOT 4-bit, because quantization degraded all results)
+- **Method:** LoRA (r=16, alpha=32) on attention projections
+- **Data:** 36 submit-only examples (18 tasks x 2 trace lengths)
+- **Loss weighting:** 5x on submit examples
+- **Infrastructure:** HF Jobs, L40S GPU (48GB), ~15 min per run
+
+### Hub Artifacts
+
+| Artifact | Hub Location |
+|----------|-------------|
+| Best SFT adapter (v5c) | [piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep) |
+| Best SFT adapter (v5d, best-epoch checkpoint) | [piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best) |
+| Full adapter eval run (all tasks) | [HF Job 69ed929cd70108f37acdf80b](https://huggingface.co/jobs/piyush-mk/69ed929cd70108f37acdf80b) |
+| Training code | [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code) |
+| Deployed environment | [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard) |
+| Live demo webpage | [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/) |
+
+### Alignment with Judging Criteria
+
+- **Environment Innovation (40%)**: `InvoiceGuard` targets enterprise AP exception resolution with multi-document reasoning, policy checks, duplicate traps, and false-positive hard tasks.
+- **Storytelling (30%)**: This README plus `BLOG.md` provide baseline, failure analysis, fixes, and trained-model behavior changes in plain language.
+- **Improvement in Rewards (20%)**: Embedded curves and metrics show measurable training gains (`0.137 -> 0.729`, `0% -> 75%` success).
+- **Reward + Training Pipeline (10%)**: Reproducible SFT/GRPO scripts, deterministic grader components, and notebook-backed reruns are included.
+
+### Training Artifacts (In Repo)
+
+All training metrics and graphs are committed to the repo:
+
+```
+invoice_guard/outputs/
+├── baseline_scores/
+│   ├── canonical__clean_qwen3_4b_instruct_2507.json    # API baseline (12 tasks)
+│   ├── hard__clean_qwen3_4b_instruct_2507.json         # API baseline (10 hard tasks)
+│   ├── local_baseline_qwen3_4b.json                    # Local baseline (per-task detail)
+│   └── ...                                             # Other model baselines
+└── training_runs/
+    ├── sft_v5c_sft_metrics.jsonl                       # Per-epoch train/eval metrics
+    ├── sft_v5c_sft_summary.json                        # Run configuration and results
+    ├── sft_v5d_sft_metrics.jsonl
+    ├── sft_v5d_sft_summary.json
+    ├── sft_eval_grader_score.png                       # Eval score progression
+    ├── sft_training_loss.png                           # Loss curve
+    ├── sft_success_rate.png                            # Task success rate
+    ├── sft_avg_steps.png                               # Steps to resolution
+    └── sft_comparison_summary.png                      # Side-by-side comparison
+```
+
+For the full technical writeup including bugs fixed, failed approaches, and lessons learned, see [BLOG.md](BLOG.md).
+
+---
+
 ## Setup & Usage
 
 ### Prerequisites
@@ -218,45 +388,99 @@ openenv validate --url http://localhost:8000
 
 ```bash
 cd invoice_guard
-openenv push
-# or: openenv push --namespace my-org --private
+openenv push --repo-id piyush-mk/invoice-guard
 ```
 
-## Baseline Scores (12 tasks)
+---
 
-| Model | Avg Score | task_1 | task_2 | task_3 | task_4 | task_5 | task_6 | task_7 | task_8 | task_9 | task_10 | task_11 | task_12 |
-|-------|-----------|--------|--------|--------|--------|--------|--------|--------|--------|--------|---------|---------|---------|
-| **gpt-4.1-mini** | **0.87** | 0.95 | 0.78 | 0.75 | 0.95 | 0.78 | 0.95 | 0.75 | 0.75 | 0.95 | 0.95 | 0.98 | 0.95 |
-| **gpt-5.4-mini** | **0.87** | 0.98 | 0.95 | 0.73 | 0.98 | 0.75 | 0.98 | 0.75 | 0.50 | 0.95 | 0.98 | 0.98 | 0.95 |
-| **gpt-4.1** | **0.79** | 0.95 | 0.75 | 0.75 | 0.47 | 0.78 | 0.95 | 0.78 | 0.75 | 0.40 | 0.95 | 0.95 | 0.95 |
-| **gpt-5.4** | **0.78** | 0.95 | 0.75 | 0.70 | 0.47 | 0.75 | 0.95 | 0.78 | 0.75 | 0.40 | 0.95 | 0.95 | 0.95 |
+## Reproducibility
 
-Key observations:
-- **Task 9** (clean invoice from risky vendor) is a strong false-positive trap: both gpt-4.1 and gpt-5.4 escalated instead of approving, scoring only 0.40.
-- **Task 8** (split invoice pattern) tripped gpt-5.4-mini, which rejected instead of escalating (0.50).
-- **Task 4** (duplicate invoice) tripped both full-size models, which escalated instead of rejecting (0.47).
-- Mini models consistently outperform their larger counterparts on this benchmark, suggesting the tasks reward focused analysis over verbose reasoning.
+### Reproduce Baselines
+
+```bash
+cd invoice_guard
+uv sync
+cp .env.example .env
+# Edit .env with your API key
+uv run python inference.py
+```
+
+### Reproduce Training
+
+Open `notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb` in Colab or Kaggle (GPU runtime required), set `HF_TOKEN` in secrets, and run cells top-to-bottom. The notebook runs submit-focused SFT with the same configuration that achieved 0.729.
+
+Direct Colab launch link:
+[colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb](https://colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb)
+
+```bash
+# Or run locally with a GPU:
+cd invoice_guard
+uv run python -m training.train_sft \
+  --no-4bit \
+  --submit-only \
+  --min-investigation-steps 7 \
+  --num-epochs 12 \
+  --lr 5e-5
+```
+
+## Minimal Demo UI (GitHub Pages)
+
+A lightweight static demo site is included in `docs/` with three pages:
+
+- `docs/index.html`: home demo (baseline vs trained behavior + curves)
+- `docs/tasks.html`: task/scoring explanation
+- `docs/blog.html`: one-page render of `BLOG.md`
+
+### Deploy with GitHub Pages
+
+1. Push this repo to GitHub.
+2. In repository Settings -> Pages:
+   - Source: `Deploy from a branch`
+   - Branch: `main`
+   - Folder: `/docs`
+3. Save. GitHub will publish the site URL automatically.
 
 ## Project Structure
 
 ```
-invoice_guard/
-|---- openenv.yaml              # OpenEnv manifest
-|---- pyproject.toml             # Dependencies (managed by uv)
-|---- uv.lock                   # Locked dependencies
-|---- Dockerfile                # Container image definition
-|---- models.py                 # All data models (Action, Observation, State, entities)
-|---- client.py                 # InvoiceGuardEnv client (EnvClient subclass)
-|---- inference.py              # Baseline LLM agent script
-|---- .env.example              # Environment variable template
-|---- tasks/
-|   |---- __init__.py
-|   |---- definitions.py        # Synthetic case templates and ground truth
-|---- graders/
-|   |---- __init__.py
-|   |---- scoring.py            # Deterministic multi-criteria grader
-|---- server/
-    |---- __init__.py
-    |---- app.py                 # FastAPI application (HTTP + WebSocket)
-    |---- invoice_guard_environment.py  # Core Environment implementation
+InvoiceGuard/
+├── README.md
+├── BLOG.md                          # Training journey, bugs fixed, lessons learned
+├── SUBMISSION.md
+├── notebooks/
+│   └── InvoiceGuard_Round2_GRPO_Reproducibility.ipynb
+└── invoice_guard/
+    ├── openenv.yaml                 # OpenEnv manifest
+    ├── pyproject.toml               # Dependencies (managed by uv)
+    ├── uv.lock                      # Locked dependencies
+    ├── Dockerfile                   # Container image definition
+    ├── models.py                    # All data models (Action, Observation, State, entities)
+    ├── client.py                    # InvoiceGuardEnv client (EnvClient subclass)
+    ├── inference.py                 # Baseline LLM agent + response parsing
+    ├── eval_round2.py               # Round 2 evaluation harness
+    ├── .env.example                 # Environment variable template
+    ├── outputs/
+    │   ├── baseline_scores/         # Per-task baseline JSONs (Qwen3-4B, Qwen2.5-7B, GPT)
+    │   └── training_runs/           # SFT metrics, summaries, and training curve PNGs
+    ├── tasks/
+    │   ├── definitions.py           # 12 canonical + 8 variant task builders
+    │   └── hard_definitions.py      # 10 hard-mode tasks (Round 2)
+    ├── graders/
+    │   └── scoring.py               # Deterministic 6-criterion grader
+    ├── server/
+    │   ├── app.py                   # FastAPI application (HTTP + WebSocket)
+    │   └── invoice_guard_environment.py
+    ├── training/
+    │   ├── README.md                # Training documentation
+    │   ├── train_sft.py             # Submit-focused SFT script
+    │   ├── train_grpo.py            # Trajectory GRPO training script
+    │   ├── rollout.py               # Agentic rollout helper
+    │   ├── launch_hf_job.py         # HF Jobs launcher
+    │   ├── eval_adapter.py          # LoRA adapter evaluation
+    │   └── merge_adapter.py         # Merge LoRA into base model
+    └── tests/                       # Unit tests
 ```
+
+## License
+
+This project was created for the OpenEnv Hackathon 2026.
