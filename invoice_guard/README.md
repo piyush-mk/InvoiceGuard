@@ -17,6 +17,17 @@ An OpenEnv environment that simulates accounts payable exception resolution. An 
 
 **Repository:** [github.com/piyush-mk/InvoiceGuard](https://github.com/piyush-mk/InvoiceGuard)
 **Live Demo Webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
+**Hackathon Blog (separate file):** [`BLOG.md`](./BLOG.md)
+
+## Problem Statement and Theme Alignment
+
+**Problem statement:** Train an LLM agent to resolve enterprise AP exceptions by investigating invoice, PO, GRN, vendor, and policy evidence and then submitting a policy-grounded final decision.
+
+**Primary hackathon theme:** **Theme #3.1 Professional Tasks (World Modeling)**  
+This environment models a realistic professional workflow with tool interactions, stateful investigation, and deterministic reward/grade feedback.
+
+**Secondary theme:** **Theme #2 Long-Horizon Planning & Instruction Following**  
+The agent must plan multi-step investigation sequences and decide when to conclude with `submit_final_resolution`.
 
 ## Motivation
 

@@ -96,5 +96,122 @@
       ],
       "summary": "Baseline loops for 12 steps. Trained policy validates PO, delivery, and vendor profile, then submits a clean approval decision."
     }
+  ],
+  "simulator_cases": [
+    {
+      "difficulty": "easy",
+      "task_id": "task_1_clean_match",
+      "title": "Clean 3-way match",
+      "goal": "Approve invoice when invoice, PO, and GRN align cleanly.",
+      "steps": [
+        {
+          "step_no": 1,
+          "agent_action": "inspect_purchase_order",
+          "tool_used": "inspect_purchase_order",
+          "reads": ["Purchase Order"],
+          "result": "PO line items and unit prices are visible and consistent."
+        },
+        {
+          "step_no": 2,
+          "agent_action": "inspect_goods_receipt_note",
+          "tool_used": "inspect_goods_receipt_note",
+          "reads": ["Goods Receipt Note"],
+          "result": "Received quantities match ordered quantities."
+        },
+        {
+          "step_no": 3,
+          "agent_action": "inspect_invoice_line_items",
+          "tool_used": "inspect_invoice_line_items",
+          "reads": ["Invoice"],
+          "result": "Invoice quantity and unit prices match PO and GRN."
+        },
+        {
+          "step_no": 4,
+          "agent_action": "submit_final_resolution",
+          "tool_used": "submit_final_resolution",
+          "reads": ["Policy rules"],
+          "result": "Final decision: approve_for_payment, exception_type: clean_match."
+        }
+      ]
+    },
+    {
+      "difficulty": "moderate",
+      "task_id": "task_2_partial_receipt",
+      "title": "Partial receipt discrepancy",
+      "goal": "Detect quantity mismatch between billed and received goods.",
+      "steps": [
+        {
+          "step_no": 1,
+          "agent_action": "inspect_purchase_order",
+          "tool_used": "inspect_purchase_order",
+          "reads": ["Purchase Order"],
+          "result": "PO confirms ordered quantity and agreed commercial terms."
+        },
+        {
+          "step_no": 2,
+          "agent_action": "inspect_goods_receipt_note",
+          "tool_used": "inspect_goods_receipt_note",
+          "reads": ["Goods Receipt Note"],
+          "result": "GRN shows lower received quantity than billed quantity."
+        },
+        {
+          "step_no": 3,
+          "agent_action": "compare_quantity",
+          "tool_used": "compare_quantity",
+          "reads": ["Invoice", "PO", "GRN"],
+          "result": "Quantity variance exceeds tolerance and requires hold workflow."
+        },
+        {
+          "step_no": 4,
+          "agent_action": "submit_final_resolution",
+          "tool_used": "submit_final_resolution",
+          "reads": ["Policy rules"],
+          "result": "Final decision: place_on_hold, exception_type: partial_receipt."
+        }
+      ]
+    },
+    {
+      "difficulty": "hard",
+      "task_id": "task_8_split_invoice_pattern",
+      "title": "Split invoice threshold dance",
+      "goal": "Identify policy-violation pattern despite sub-threshold invoices.",
+      "steps": [
+        {
+          "step_no": 1,
+          "agent_action": "inspect_purchase_order",
+          "tool_used": "inspect_purchase_order",
+          "reads": ["Purchase Order"],
+          "result": "PO authorizes full shipment amount and staged delivery context."
+        },
+        {
+          "step_no": 2,
+          "agent_action": "inspect_goods_receipt_note",
+          "tool_used": "inspect_goods_receipt_note",
+          "reads": ["Goods Receipt Note"],
+          "result": "GRN confirms multi-drop receiving events for same PO window."
+        },
+        {
+          "step_no": 3,
+          "agent_action": "compare_price",
+          "tool_used": "compare_price",
+          "reads": ["Invoice", "PO"],
+          "result": "Unit prices look valid individually, so issue is behavioral pattern not pure price mismatch."
+        },
+        {
+          "step_no": 4,
+          "agent_action": "inspect_policy_rules",
+          "tool_used": "inspect_policy_rules",
+          "reads": ["Policy document"],
+          "result": "Policy flags repeated sub-threshold invoicing as threshold-dance behavior."
+        },
+        {
+          "step_no": 5,
+          "agent_action": "submit_final_resolution",
+          "tool_used": "submit_final_resolution",
+          "reads": ["Policy + case evidence"],
+          "result": "Final decision: escalate_for_supervisor_review, exception_type: policy_violation."
+        }
+      ]
+    }
   ]
 }

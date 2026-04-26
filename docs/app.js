@@ -258,6 +258,102 @@ function renderDemo(demoCases) {
   paint();
 }
 
+function renderSimulator(simCases) {
+  if (!Array.isArray(simCases) || !simCases.length) return;
+  let caseIdx = 0;
+  let stepIdx = 0;
+  let autoplayTimer = null;
+  let autoplayOn = false;
+  const AUTOPLAY_MS = 1800;
+
+  const titleEl = document.getElementById("simCaseTitle");
+  const goalEl = document.getElementById("simGoal");
+  const stepHeadEl = document.getElementById("simStepHead");
+  const readsEl = document.getElementById("simReads");
+  const toolEl = document.getElementById("simTool");
+  const resultEl = document.getElementById("simResult");
+  const traceEl = document.getElementById("simTrace");
+  const autoplayBtn = document.getElementById("toggleSimAutoplay");
+  const progressEl = document.getElementById("simStepProgress");
+
+  function currentSteps() {
+    return simCases[caseIdx].steps || [];
+  }
+
+  function updateAutoplayButton() {
+    if (!autoplayBtn) return;
+    autoplayBtn.textContent = autoplayOn ? "Pause auto-play" : "Auto-play";
+    autoplayBtn.classList.toggle("autoplay-on", autoplayOn);
+  }
+
+  function stopAutoplay() {
+    autoplayOn = false;
+    if (autoplayTimer) {
+      clearInterval(autoplayTimer);
+      autoplayTimer = null;
+    }
+    updateAutoplayButton();
+  }
+
+  function nextStep() {
+    const steps = currentSteps();
+    if (!steps.length) return;
+    stepIdx = (stepIdx + 1) % steps.length;
+    paint();
+  }
+
+  function startAutoplay() {
+    stopAutoplay();
+    autoplayOn = true;
+    autoplayTimer = setInterval(() => {
+      nextStep();
+    }, AUTOPLAY_MS);
+    updateAutoplayButton();
+  }
+
+  function paint() {
+    const sc = simCases[caseIdx];
+    const steps = currentSteps();
+    if (!steps.length) return;
+    const current = steps[stepIdx];
+    titleEl.textContent = `${sc.difficulty.toUpperCase()} - ${sc.title} (${sc.task_id})`;
+    if (progressEl) progressEl.textContent = `Step ${stepIdx + 1}/${steps.length}`;
+    goalEl.textContent = sc.goal || "";
+    stepHeadEl.textContent = `Step ${current.step_no}: ${current.agent_action}`;
+    readsEl.textContent = (current.reads || []).join(", ");
+    toolEl.textContent = current.tool_used || current.agent_action || "";
+    resultEl.textContent = current.result || "";
+
+    traceEl.innerHTML = "";
+    steps.forEach((s, i) => {
+      const li = document.createElement("li");
+      li.textContent = `${s.step_no}. ${s.agent_action}`;
+      if (s.agent_action === "submit_final_resolution") li.classList.add("submit");
+      if (i === stepIdx) li.classList.add("active-step");
+      traceEl.appendChild(li);
+    });
+  }
+
+  document.getElementById("prevSimCase")?.addEventListener("click", () => {
+    caseIdx = (caseIdx - 1 + simCases.length) % simCases.length;
+    stepIdx = 0;
+    paint();
+  });
+  document.getElementById("nextSimCase")?.addEventListener("click", () => {
+    caseIdx = (caseIdx + 1) % simCases.length;
+    stepIdx = 0;
+    paint();
+  });
+  document.getElementById("nextSimStep")?.addEventListener("click", nextStep);
+  autoplayBtn?.addEventListener("click", () => {
+    if (autoplayOn) stopAutoplay();
+    else startAutoplay();
+  });
+
+  updateAutoplayButton();
+  paint();
+}
+
 async function renderBlogPage() {
   const container = document.getElementById("blogContainer");
   if (!container) return;
@@ -284,6 +380,7 @@ async function init() {
     fillLinks(data.project);
     renderMetrics(data.metrics);
     renderDemo(data.demo_cases);
+    renderSimulator(data.simulator_cases);
   } catch (e) {
     const err = document.getElementById("appError");
     if (err) err.textContent = `demo-data load issue: ${e.message}`;

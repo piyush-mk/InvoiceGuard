@@ -4,8 +4,20 @@ An [OpenEnv](https://github.com/meta-pytorch/openenv) environment that simulates
 
 **Hugging Face Space:** [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard)
 **Hugging Face Code Repo:** [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code)
+**HF Space Blog (separate MD):** [piyush-mk/invoice-guard/blob/main/BLOG.md](https://huggingface.co/spaces/piyush-mk/invoice-guard/blob/main/BLOG.md)
 **Live Demo Webpage:** [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/)
+**Public Colab Notebook (runnable):** [InvoiceGuard_Round2_GRPO_Reproducibility.ipynb](https://colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb)
 **Static Demo UI (GitHub Pages source):** `docs/`
+
+## Problem Statement and Hackathon Theme
+
+**Problem statement:** Build an OpenEnv environment where an LLM agent can reliably resolve real-world accounts payable exceptions by reading multi-document evidence (invoice, PO, GRN, vendor profile, policy), selecting investigation tools, and submitting a correct policy-compliant final resolution.
+
+**Primary theme alignment:** **Theme #3.1 Professional Tasks (World Modeling)**  
+InvoiceGuard is an enterprise workflow simulation with partial observability, tool-based investigation, deterministic grading, and dynamic exception patterns designed for post-training improvement.
+
+**Secondary theme alignment:** **Theme #2 Long-Horizon Planning & Instruction Following**  
+Episodes require multi-step evidence gathering, action sequencing, and deliberate completion behavior (`submit_final_resolution`) under a step budget.
 
 ## Motivation
 
@@ -183,11 +195,24 @@ The same Qwen3-4B model that scores **0.83** via cloud API scores just **0.137**
 | Local baseline (no training) | 0.137 | 0% | 12.0 | Never |
 | SFT v5c (best epoch 13) | **0.729** | **75%** | 3.0 | Yes |
 | SFT v5d (best epoch 9) | **0.704** | **75%** | 4.25 | Yes |
+| GRPO v6c (warm-start init) | 0.704 | 75% | 4.25 | Yes |
+| GRPO v6c (best iter2) | **0.775** | **75%** | 4.50 | Yes |
+| GRPO v6c (final iter3) | 0.720 | 75% | 4.50 | Yes |
 | API baseline (for reference) | 0.827 | — | — | Yes |
 
 **5.3x improvement** over the untrained local baseline. The trained model closes 86% of the gap between untrained local (0.137) and cloud API (0.827).
 
 ### Training Curves
+
+#### Baseline → SFT → GRPO Score Progression
+
+![Round 2 Progression Score](./invoice_guard/outputs/training_runs/round2_progression_eval_score.png)
+This is the end to end trajectory: local baseline starts at 0.137, SFT raises quality to 0.70 plus, then warm-started GRPO peaks at 0.775 on holdout eval.
+
+#### Round 2 Stage Snapshot
+
+![Round 2 Stage Comparison](./invoice_guard/outputs/training_runs/round2_stage_comparison.png)
+This summary compares score, success rate, and step efficiency across local baseline, best SFT stage, and warm-started GRPO checkpoints.
 
 #### Grader Score Over Epochs
 
@@ -214,6 +239,21 @@ Average steps drop from timeout-level behavior (12) to focused resolution behavi
 ![Comparison Summary](./invoice_guard/outputs/training_runs/sft_comparison_summary.png)
 One-page comparison of baseline vs trained checkpoints across score, success rate, and decision efficiency.
 
+#### GRPO Training Signals
+
+![GRPO Training Signals](./invoice_guard/outputs/training_runs/round2_grpo_training_signals.png)
+During GRPO updates, group reward and grader quality stay high overall, but instability on a few tasks creates non-monotonic progress.
+
+#### GRPO Loss Components (Log Scale)
+
+![GRPO Loss Components](./invoice_guard/outputs/training_runs/round2_grpo_loss_components_log.png)
+Policy loss dominates and fluctuates heavily, while KL remains much smaller; this explains why iter2 is best and iter3 regresses.
+
+#### SFT Loss Curves (Log Scale)
+
+![SFT Loss Curves Log](./invoice_guard/outputs/training_runs/round2_sft_training_loss_log.png)
+Both SFT runs show fast convergence from high initial loss to low stable loss, matching the rapid behavior shift to proper submission.
+
 ### What Worked: Submit-Focused SFT
 
 Standard SFT on full expert traces failed because the model memorized investigation actions (90% of training data) and never learned to submit. Our breakthrough was **submit-only SFT**: training exclusively on `submit_final_resolution` examples with full conversation context.
@@ -226,6 +266,15 @@ Standard SFT on full expert traces failed because the model memorized investigat
 | **Submit-only SFT (min 7 inv. steps)** | **0.729** | **Learns to investigate THEN submit** |
 
 The base model already knows how to investigate. Training on investigation examples degrades that ability. Training only on submit examples adds the missing skill (knowing when to conclude) without degrading existing capabilities.
+
+### What GRPO Added After SFT Warm-Start
+
+GRPO was run from the best SFT adapter (`invoiceguard-qwen3-4b-sft-v5d-submit-deep-best`) with no format warmup. This preserved the submission behavior and improved holdout score from `0.7038` (init) to `0.7750` (iter2), then settled at `0.7200` by iter3.
+
+The run demonstrates a practical pattern for this environment:
+- SFT establishes the critical submit behavior and stable JSON policy.
+- Warm-started GRPO can improve reward quality on top of SFT.
+- The best GRPO checkpoint is not always the final one, so checkpoint selection by holdout score is required.
 
 ### Training Configuration
 
@@ -358,6 +407,9 @@ uv run python inference.py
 ### Reproduce Training
 
 Open `notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb` in Colab or Kaggle (GPU runtime required), set `HF_TOKEN` in secrets, and run cells top-to-bottom. The notebook runs submit-focused SFT with the same configuration that achieved 0.729.
+
+Direct Colab launch link:
+[colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb](https://colab.research.google.com/github/piyush-mk/InvoiceGuard/blob/main/notebooks/InvoiceGuard_Round2_GRPO_Reproducibility.ipynb)
 
 ```bash
 # Or run locally with a GPU:

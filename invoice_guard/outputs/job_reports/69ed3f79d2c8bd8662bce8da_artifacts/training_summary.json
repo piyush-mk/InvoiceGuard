@@ -1,0 +1,44 @@
+{
+  "run_started_at": "2026-04-25T22:28:11.427369+00:00",
+  "run_finished_at": "2026-04-26T00:01:39.616247+00:00",
+  "base_model": "Qwen/Qwen3-4B-Instruct-2507",
+  "hub_model_id": "invoiceguard-qwen3-4b-grpo-v6c-stable",
+  "num_iterations": 3,
+  "group_size": 8,
+  "train_tasks": [
+    "task_11_authorized_overship",
+    "task_7_retroactive_price",
+    "task_10_rounding_false_alarm",
+    "task_9_clean_from_risky_vendor",
+    "task_h8_rush_premium_authorized",
+    "task_h7_multi_party_pending",
+    "task_h10_cross_case_contradiction",
+    "task_h1_phantom_grn_period",
+    "task_3_price_variance",
+    "task_1_clean_match",
+    "task_h9_supplier_id_mismatch",
+    "task_2_partial_receipt",
+    "task_12_corrected_resubmission",
+    "task_h5_retroactive_amendment",
+    "task_5_mixed_discrepancy",
+    "task_4_duplicate_invoice",
+    "task_h3_currency_silent_swap",
+    "task_h2_kickback_inflated_po"
+  ],
+  "eval_tasks": [
+    "task_8_split_invoice_pattern",
+    "task_6_false_positive_duplicate",
+    "task_h6_returned_then_rebilled",
+    "task_h4_threshold_dance"
+  ],
+  "wall_clock_s": 5549.25,
+  "n_metric_rows": 58,
+  "n_rollout_samples": 97,
+  "artifact_files": [
+    "holdout_eval_curve.png",
+    "metrics.jsonl",
+    "rollout_samples.jsonl",
+    "training_loss_curve.png",
+    "training_reward_curve.png"
+  ]
+}
