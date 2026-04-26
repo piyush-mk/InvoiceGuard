@@ -291,6 +291,7 @@ The run demonstrates a practical pattern for this environment:
 |----------|-------------|
 | Best SFT adapter (v5c) | [piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5c-submit-deep) |
 | Best SFT adapter (v5d, best-epoch checkpoint) | [piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best](https://huggingface.co/piyush-mk/invoiceguard-qwen3-4b-sft-v5d-submit-deep-best) |
+| Full adapter eval run (all tasks) | [HF Job 69ed929cd70108f37acdf80b](https://huggingface.co/jobs/piyush-mk/69ed929cd70108f37acdf80b) |
 | Training code | [piyush-mk/invoiceguard-code](https://huggingface.co/piyush-mk/invoiceguard-code) |
 | Deployed environment | [piyush-mk/invoice-guard](https://huggingface.co/spaces/piyush-mk/invoice-guard) |
 | Live demo webpage | [piyush-mk.github.io/InvoiceGuard](https://piyush-mk.github.io/InvoiceGuard/) |
